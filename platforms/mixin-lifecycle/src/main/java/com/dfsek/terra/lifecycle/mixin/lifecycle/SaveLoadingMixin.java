@@ -21,7 +21,7 @@ public class SaveLoadingMixin {
             value = "INVOKE",
             target = "Lnet/minecraft/server/DataPackContents;reload(Lnet/minecraft/resource/ResourceManager;" +
                      "Lnet/minecraft/registry/CombinedDynamicRegistries;Ljava/util/List;Lnet/minecraft/resource/featuretoggle/FeatureSet;" +
-                     "Lnet/minecraft/server/command/CommandManager$RegistrationEnvironment;ILjava/util/concurrent/Executor;" +
+                     "Lnet/minecraft/server/command/CommandManager$RegistrationEnvironment;Lnet/minecraft/command/permission/PermissionPredicate;Ljava/util/concurrent/Executor;" +
                      "Ljava/util/concurrent/Executor;)Ljava/util/concurrent/CompletableFuture;"),
         index = 1
     )

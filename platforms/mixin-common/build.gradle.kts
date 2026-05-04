@@ -5,6 +5,8 @@ plugins {
 
 loom {
     accessWidenerPath.set(file("src/main/resources/terra.accesswidener"))
+    enableModProvidedJavadoc.set(false)
+    mixin.useLegacyMixinAp = true
 
     mixin {
         defaultRefmapName.set("terra.common.refmap.json")
@@ -26,4 +28,3 @@ architectury {
     common("fabric")
     minecraft = Versions.Mod.minecraft
 }
-

@@ -36,6 +36,8 @@ dependencies {
 
 loom {
     accessWidenerPath.set(project(":platforms:mixin-common").file("src/main/resources/terra.accesswidener"))
+    enableModProvidedJavadoc.set(false)
+    mixin.useLegacyMixinAp = true
 
     mixin {
         defaultRefmapName.set("terra.fabric.refmap.json")

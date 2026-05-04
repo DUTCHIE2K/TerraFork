@@ -1,0 +1,12 @@
+com.dfsek.seismic.math.algebra.LinearAlgebraFunctions
+com.dfsek.seismic.math.algebra.AlgebraFunctions
+com.dfsek.seismic.math.statistic.StatisticFunctions
+com.dfsek.seismic.math.arithmetic.ArithmeticFunctions
+com.dfsek.seismic.math.trigonometry.TrigonometryFunctions
+com.dfsek.seismic.math.integer.IntegerFunctions
+com.dfsek.seismic.math.numericanalysis.interpolation.InterpolationFunctions
+com.dfsek.seismic.math.numericanalysis.interpolation.sigmoid.SigmoidFunctions
+com.dfsek.seismic.math.numericanalysis.interpolation.sigmoid.SmoothstepFunctions
+com.dfsek.seismic.math.floatingpoint.FloatingPointFunctions
+com.dfsek.seismic.math.coord.CoordFunctions
+com.dfsek.seismic.math.normalization.NormalizationFunctions
