@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import com.dfsek.terra.api.config.ConfigPack;
+import com.dfsek.terra.api.config.PluginConfig;
 import com.dfsek.terra.api.world.biome.generation.BiomeProvider;
 import com.dfsek.terra.api.world.info.WorldProperties;
 import com.dfsek.terra.bukkit.config.PreLoadCompatibilityOptions;
@@ -42,13 +43,16 @@ public class NMSChunkGeneratorDelegate extends ChunkGenerator {
     private final ConfigPack pack;
 
     private final long seed;
+    private final PluginConfig pluginConfig;
 
-    public NMSChunkGeneratorDelegate(ChunkGenerator vanilla, ConfigPack pack, NMSBiomeProvider biomeProvider, long seed) {
+    public NMSChunkGeneratorDelegate(ChunkGenerator vanilla, ConfigPack pack, NMSBiomeProvider biomeProvider, long seed,
+                                     PluginConfig pluginConfig) {
         super(biomeProvider);
         this.delegate = pack.getGeneratorProvider().newInstance(pack);
         this.vanilla = vanilla;
         this.pack = pack;
         this.seed = seed;
+        this.pluginConfig = pluginConfig;
     }
 
     @Override
@@ -93,7 +97,7 @@ public class NMSChunkGeneratorDelegate extends ChunkGenerator {
                 LevelAccessor level = Reflection.STRUCTURE_MANAGER.getLevel(structureAccessor);
                 BiomeProvider biomeProvider = pack.getBiomeProvider();
                 PreLoadCompatibilityOptions compatibilityOptions = pack.getContext().get(PreLoadCompatibilityOptions.class);
-                if(compatibilityOptions.isBeard()) {
+                if(compatibilityOptions.isBeard() && pluginConfig.isDebugStructureBeardEnabled()) {
                     beard(structureAccessor, chunk, new BukkitWorldProperties(level.getMinecraftWorld().getWorld()),
                         biomeProvider, compatibilityOptions);
                 }

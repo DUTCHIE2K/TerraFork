@@ -57,6 +57,18 @@ public class PluginConfigImpl implements ConfigTemplate, PluginConfig {
     @Default
     private boolean debugLog = false;
 
+    @Value("debug.worldgen.structure-beard")
+    @Default
+    private boolean debugStructureBeard = true;
+
+    @Value("debug.worldgen.sculk-blobs")
+    @Default
+    private boolean debugSculkBlobs = true;
+
+    @Value("debug.worldgen.cave-carvers")
+    @Default
+    private boolean debugCaveCarvers = true;
+
     @Value("biome-search-resolution")
     @Default
     private int biomeSearch = 4;
@@ -99,6 +111,12 @@ public class PluginConfigImpl implements ConfigTemplate, PluginConfig {
             logger.info("Script debug blocks enabled.");
         if(debugLog)
             logger.info("Debug logging enabled.");
+        if(!debugStructureBeard)
+            logger.info("Debug worldgen override enabled: structure beard disabled.");
+        if(!debugSculkBlobs)
+            logger.info("Debug worldgen override enabled: sculk blobs disabled.");
+        if(!debugCaveCarvers)
+            logger.info("Debug worldgen override enabled: cave carvers disabled.");
     }
 
     @Override
@@ -119,6 +137,21 @@ public class PluginConfigImpl implements ConfigTemplate, PluginConfig {
     @Override
     public boolean isDebugLog() {
         return debugLog;
+    }
+
+    @Override
+    public boolean isDebugStructureBeardEnabled() {
+        return debugStructureBeard;
+    }
+
+    @Override
+    public boolean isDebugSculkBlobsEnabled() {
+        return debugSculkBlobs;
+    }
+
+    @Override
+    public boolean isDebugCaveCarversEnabled() {
+        return debugCaveCarvers;
     }
 
     @Override

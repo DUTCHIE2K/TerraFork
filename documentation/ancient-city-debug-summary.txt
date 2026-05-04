@@ -1,0 +1,78 @@
+Ancient City / Bukkit Worldgen Debug Summary
+Date: 2026-05-04
+
+Context
+- Terrain around an ancient city looked wrong on the Bukkit/Paper build of this Terra fork.
+- Symptoms included:
+  - square-ish excavation around the city
+  - exposed sand / stone / terracotta where a deep dark city was expected
+  - sculk coverage that looked lighter than expected
+  - BukkitProtoWorld out-of-bounds warnings during generation
+
+Main Findings So Far
+1. Ancient city visuals and BukkitProtoWorld warnings are not the same issue.
+2. The ancient city cavity/excavation is controlled by Terra's custom structure beard pass.
+3. Disabling the beard pass removes the excavation almost entirely, leaving the city pieces placed in raw terrain.
+4. That means the ugly square excavation is coming from the beard/palette adaptation path, not from sculk blobs.
+5. Some warnings were horizontal region overreach, but the latest reproducible warning was a min-Y underflow (y = -65, one below world bottom of -64).
+
+What We Tested
+1. Added temporary config.yml debug toggles:
+   - debug.worldgen.structure-beard
+   - debug.worldgen.sculk-blobs
+   - debug.worldgen.cave-carvers
+
+2. Test result: sculk-blobs = false
+   - No visible change to the ancient city problem.
+   - Conclusion: SCULK_BLOBS is not the driver of the ancient city visual issue.
+
+3. Test result: structure-beard = false
+   - The ancient city excavation/carving disappeared almost entirely.
+   - City pieces still existed, but terrain was not adapted around them.
+   - Conclusion: the visual bug is in the beard path.
+
+4. Test result: cave-carvers = false
+   - Warnings still occurred.
+   - Conclusion: CAVE_CARVERS is not the cause of the latest reproducible warning.
+
+Current Best Read
+Issue A: Ancient city visuals
+- Severity: real correctness bug, not just cosmetic preference.
+- Most likely cause:
+  - Terra's beard pass repaints structure-adapted terrain from the local Terra palette.
+  - If the city intersects or samples the wrong cave biome/palette, the adaptation can produce square excavation and wrong materials.
+- Strong supporting fact:
+  - With structure-beard disabled, the cavity disappears.
+
+Issue B: BukkitProtoWorld warning
+- Latest reproducible warning:
+  - Detected world access at coordinates out of bounds: (-402, -65, -1364) accessed for region [-25, -85]
+- Interpretation:
+  - x and z are not the problem there.
+  - y = -65 is one block below world minimum y = -64.
+- Severity:
+  - Low by itself. This is not a server-health or TPS emergency.
+  - Still a correctness issue because a feature is probing or writing below min-Y.
+
+Remaining Possible Causes For The Warning
+Most likely remaining suspects are deep dark features that operate at bottom-y and use offset -1 checks, especially:
+- SCULK_TENDRIL
+- SCULK_FLORA
+
+Why those are still suspect
+- They can start at bottom-y.
+- They contain bottom-neighbor checks using offset -1.
+- That matches a y = -65 access much better than wide horizontal overreach features.
+
+What Is No Longer The Leading Cause
+- SCULK_BLOBS for the ancient city visuals
+- CAVE_CARVERS for the latest y = -65 warning
+- structure-beard for the BukkitProtoWorld warning path itself
+
+Recommended Next Step
+- Add temporary instrumentation so when BukkitProtoWorld logs an out-of-bounds access, it also reports the active generation stage / feature ID.
+- That should identify the exact feature causing the min-Y underflow immediately.
+
+Practical Prioritization
+- Do not block optimization work on the y = -65 warning alone.
+- Do treat the ancient city beard/palette issue as release-quality worldgen debt worth fixing.

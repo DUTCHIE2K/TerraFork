@@ -10,6 +10,10 @@ debug:
   log: false
   profiler: false
   script: false
+  worldgen:
+    structure-beard: true
+    sculk-blobs: true
+    cave-carvers: true
 biome-search-resolution: 4
 cache:
   structure: 32

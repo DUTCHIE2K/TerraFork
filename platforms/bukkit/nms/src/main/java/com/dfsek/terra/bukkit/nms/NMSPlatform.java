@@ -45,7 +45,7 @@ public class NMSPlatform extends PlatformImpl {
     public NMSPlatform(TerraBukkitPlugin plugin) {
         super(plugin);
 
-        Bukkit.getPluginManager().registerEvents(new NMSInjectListener(), plugin);
+        Bukkit.getPluginManager().registerEvents(new NMSInjectListener(getTerraConfig()), plugin);
     }
 
     @Override

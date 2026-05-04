@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 
 import com.dfsek.terra.api.config.ConfigPack;
+import com.dfsek.terra.api.config.PluginConfig;
 import com.dfsek.terra.bukkit.generator.BukkitChunkGeneratorWrapper;
 
 
@@ -24,6 +25,11 @@ public class NMSInjectListener implements Listener {
     private static final Logger LOGGER = LoggerFactory.getLogger(NMSInjectListener.class);
     private static final Set<World> INJECTED = new HashSet<>();
     private static final ReentrantLock INJECT_LOCK = new ReentrantLock();
+    private final PluginConfig pluginConfig;
+
+    public NMSInjectListener(PluginConfig pluginConfig) {
+        this.pluginConfig = pluginConfig;
+    }
 
     @EventHandler
     public void onWorldInit(WorldInitEvent event) {
@@ -43,7 +49,7 @@ public class NMSInjectListener implements Listener {
             WorldGenContext worldGenContext = Reflection.CHUNKMAP.getWorldGenContext(chunkMap);
             Reflection.CHUNKMAP.setWorldGenContext(chunkMap, new WorldGenContext(
                 worldGenContext.level(),
-                new NMSChunkGeneratorDelegate(vanilla, pack, provider, craftWorld.getSeed()),
+                new NMSChunkGeneratorDelegate(vanilla, pack, provider, craftWorld.getSeed(), pluginConfig),
                 worldGenContext.structureManager(),
                 worldGenContext.lightEngine(),
                 worldGenContext.mainThreadExecutor(),

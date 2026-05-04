@@ -19,6 +19,7 @@ import com.dfsek.terra.api.Platform;
 import com.dfsek.terra.api.properties.PropertyKey;
 import com.dfsek.terra.api.registry.key.StringIdentifiable;
 import com.dfsek.terra.api.util.random.RandomGenerators;
+import com.dfsek.terra.api.structure.feature.Feature;
 import com.dfsek.terra.api.world.WritableWorld;
 import com.dfsek.terra.api.world.chunk.generation.ProtoWorld;
 import com.dfsek.terra.api.world.chunk.generation.stage.GenerationStage;
@@ -26,6 +27,8 @@ import com.dfsek.terra.api.world.chunk.generation.util.Column;
 
 
 public class FeatureGenerationStage implements GenerationStage, StringIdentifiable {
+    private static final String SCULK_BLOBS_ID = "SCULK_BLOBS";
+    private static final String CAVE_CARVERS_ID = "CAVE_CARVERS";
     private final Platform platform;
 
     private final String id;
@@ -78,6 +81,9 @@ public class FeatureGenerationStage implements GenerationStage, StringIdentifiab
                                     .getFeatures()
                                     .getOrDefault(this, Collections.emptyList())
                                     .forEach(feature -> {
+                                        if(shouldSkipFeature(feature)) {
+                                            return;
+                                        }
                                         platform.getProfiler().push(feature.getID());
                                         if(feature.getDistributor().matches(x, z, seed)) {
                                             feature.getLocator()
@@ -97,6 +103,13 @@ public class FeatureGenerationStage implements GenerationStage, StringIdentifiab
             }
         }
         platform.getProfiler().pop(profile);
+    }
+
+    private boolean shouldSkipFeature(Feature feature) {
+        if(SCULK_BLOBS_ID.equalsIgnoreCase(feature.getID()) && !platform.getTerraConfig().isDebugSculkBlobsEnabled()) {
+            return true;
+        }
+        return CAVE_CARVERS_ID.equalsIgnoreCase(feature.getID()) && !platform.getTerraConfig().isDebugCaveCarversEnabled();
     }
 
     @Override

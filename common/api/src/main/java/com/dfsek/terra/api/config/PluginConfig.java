@@ -23,6 +23,12 @@ public interface PluginConfig {
 
     boolean isDebugLog();
 
+    boolean isDebugStructureBeardEnabled();
+
+    boolean isDebugSculkBlobsEnabled();
+
+    boolean isDebugCaveCarversEnabled();
+
     int getBiomeSearchResolution();
 
     int getStructureCache();
