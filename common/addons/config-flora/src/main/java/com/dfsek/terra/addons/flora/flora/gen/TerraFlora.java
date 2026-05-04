@@ -15,13 +15,13 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.random.RandomGenerator;
-import java.util.random.RandomGeneratorFactory;
 
 import com.dfsek.terra.api.block.state.BlockState;
 import com.dfsek.terra.api.block.state.properties.enums.Direction;
 import com.dfsek.terra.api.structure.Structure;
 import com.dfsek.terra.api.util.collection.MaterialSet;
 import com.dfsek.terra.api.util.collection.ProbabilityCollection;
+import com.dfsek.terra.api.util.random.RandomGenerators;
 import com.dfsek.terra.api.world.WritableWorld;
 
 
@@ -88,8 +88,7 @@ public class TerraFlora implements Structure {
                 location.getZ(), world.getSeed());
             if(doRotation) {
                 Direction oneFace = new ArrayList<>(faces).get(
-                    RandomGeneratorFactory.<RandomGenerator.SplittableGenerator>of("Xoroshiro128PlusPlus")
-                        .create(location.getX() ^ location.getZ())
+                    RandomGenerators.xoroshiro128PlusPlus(location.getX() ^ location.getZ())
                         .nextInt(faces.size())); // Get RandomGenerator face.
             }
             world.setBlockState(location.mutable().add(0, i + c, 0).immutable(), data, physics);

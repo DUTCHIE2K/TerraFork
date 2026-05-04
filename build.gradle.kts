@@ -4,7 +4,6 @@ versionProjects(":common:api", version("7.0.0"))
 versionProjects(":common:implementation", version("7.0.0"))
 versionProjects(":platforms", version("7.0.0"))
 
-
 allprojects {
     group = "com.dfsek.terra"
 
@@ -24,7 +23,8 @@ allprojects {
         maxHeapSize = "2G"
         ignoreFailures = false
         failFast = true
-        maxParallelForks = (Runtime.getRuntime().availableProcessors() - 1).takeIf { it > 0 } ?: 1
+        maxParallelForks = (Runtime.getRuntime().availableProcessors() - 1)
+            .takeIf { it > 0 } ?: 1
 
         reports.html.required.set(false)
         reports.junitXml.required.set(false)
@@ -45,6 +45,7 @@ afterEvaluate {
     }
     project(":platforms:bukkit:common").configureDistribution()
     project(":platforms:minestom:example").configureDistribution()
+
     forSubProjects(":common:addons") {
         apply(plugin = "com.gradleup.shadow")
 

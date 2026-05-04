@@ -1,3 +1,9 @@
+import java.nio.file.FileSystems
+import java.nio.file.Files
+import java.nio.file.StandardOpenOption
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
 plugins {
     id("io.papermc.paperweight.userdev")
     id("xyz.jpenilla.run-paper") version Versions.Bukkit.runPaper
@@ -14,6 +20,9 @@ dependencies {
 
 tasks {
     shadowJar {
+        val buildTimestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"))
+        archiveVersion.set("${project.version}-$buildTimestamp")
+
         relocate("io.papermc.lib", "com.dfsek.terra.lib.paperlib")
         relocate("com.google.common", "com.dfsek.terra.lib.google.common")
         relocate("org.apache.logging.slf4j", "com.dfsek.terra.lib.slf4j-over-log4j")
@@ -24,6 +33,20 @@ tasks {
         exclude("com/google/errorprone/**")
         exclude("com/google/j2objc/**")
         exclude("javax/**")
+        doLast {
+            val overrideManifest = project.file("common/src/main/resources/META-INF/CLASS_MANIFEST_seismic").toPath()
+            val archivePath = archiveFile.get().asFile.toPath()
+
+            FileSystems.newFileSystem(archivePath, null as ClassLoader?).use { fs ->
+                val target = fs.getPath("/META-INF/CLASS_MANIFEST_seismic")
+                Files.writeString(
+                    target,
+                    Files.readString(overrideManifest),
+                    StandardOpenOption.CREATE,
+                    StandardOpenOption.TRUNCATE_EXISTING
+                )
+            }
+        }
     }
 
     runServer {

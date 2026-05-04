@@ -13,12 +13,12 @@ import com.dfsek.seismic.type.vector.Vector3Int;
 
 import java.util.Collections;
 import java.util.random.RandomGenerator;
-import java.util.random.RandomGeneratorFactory;
 
 import com.dfsek.terra.addons.generation.feature.config.BiomeFeatures;
 import com.dfsek.terra.api.Platform;
 import com.dfsek.terra.api.properties.PropertyKey;
 import com.dfsek.terra.api.registry.key.StringIdentifiable;
+import com.dfsek.terra.api.util.random.RandomGenerators;
 import com.dfsek.terra.api.world.WritableWorld;
 import com.dfsek.terra.api.world.chunk.generation.ProtoWorld;
 import com.dfsek.terra.api.world.chunk.generation.stage.GenerationStage;
@@ -85,9 +85,7 @@ public class FeatureGenerationStage implements GenerationStage, StringIdentifiab
                                                 .forEach(y -> feature.getStructure(world, x, y, z)
                                                     .generate(Vector3Int.of(x, y, z),
                                                         world,
-                                                        RandomGeneratorFactory.<RandomGenerator.SplittableGenerator>of(
-                                                                "Xoroshiro128PlusPlus")
-                                                            .create(coordinateSeed * 31 + y),
+                                                        RandomGenerators.xoroshiro128PlusPlus(coordinateSeed * 31 + y),
                                                         Rotation.NONE)
                                                 );
                                         }

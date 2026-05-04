@@ -3,9 +3,6 @@ package com.dfsek.terra.api.util.collection;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
 
-import com.dfsek.seismic.util.UnsafeUtils;
-
-
 public class TriStateIntCache {
     public static final long STATE_UNSET = 0L;
     public static final long STATE_FALSE = 1L;
@@ -40,8 +37,7 @@ public class TriStateIntCache {
      * @return STATE_UNSET (0), STATE_FALSE (1), or STATE_TRUE (2)
      */
     public long get(int key) {
-        long offset = UnsafeUtils.LONG_ARRAY_BASE + ((long)(key >>> 5) << UnsafeUtils.LONG_ARRAY_SHIFT);
-        long currentWord = UnsafeUtils.UNSAFE.getLong(data, offset);
+        long currentWord = (long) ARRAY_HANDLE.getVolatile(data, key >>> 5);
         return (currentWord >>> ((key << 1) & 63)) & BIT_MASK;
     }
 

@@ -14,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.random.RandomGenerator;
-import java.util.random.RandomGeneratorFactory;
 
 import com.dfsek.terra.addons.terrascript.parser.lang.ImplementationArguments;
 import com.dfsek.terra.addons.terrascript.parser.lang.Returnable;
@@ -30,6 +29,7 @@ import com.dfsek.terra.api.event.events.world.generation.LootPopulateEvent;
 import com.dfsek.terra.api.registry.Registry;
 import com.dfsek.terra.api.registry.key.RegistryKey;
 import com.dfsek.terra.api.structure.LootTable;
+import com.dfsek.terra.api.util.random.RandomGenerators;
 
 
 public class LootFunction implements Function<Void> {
@@ -84,8 +84,7 @@ public class LootFunction implements Function<Void> {
                         if(event.isCancelled()) return;
 
                         event.getTable().fillInventory(container.getInventory(),
-                            RandomGeneratorFactory.<RandomGenerator.SplittableGenerator>of(
-                                "Xoroshiro128PlusPlus").create(apply.hashCode()));
+                            RandomGenerators.xoroshiro128PlusPlus(apply.hashCode()));
                         data.update(false);
                     } catch(Exception e) {
                         LOGGER.error("Could not apply loot at {}", apply, e);
