@@ -6,9 +6,10 @@ import com.dfsek.tectonic.api.config.template.object.ObjectTemplate;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.sounds.Music;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.attribute.BackgroundMusic;
 
 
-public class MusicSoundTemplate implements ObjectTemplate<Music> {
+public class MusicSoundTemplate implements ObjectTemplate<BackgroundMusic> {
     @Value("sound")
     @Default
     private SoundEvent sound = null;
@@ -26,11 +27,12 @@ public class MusicSoundTemplate implements ObjectTemplate<Music> {
     private Boolean replaceCurrentMusic = null;
 
     @Override
-    public Music get() {
+    public BackgroundMusic get() {
         if(sound == null || minDelay == null || maxDelay == null || replaceCurrentMusic == null) {
             return null;
         } else {
-            return new Music(BuiltInRegistries.SOUND_EVENT.wrapAsHolder(sound), minDelay, maxDelay, replaceCurrentMusic);
+            return new BackgroundMusic(new Music(BuiltInRegistries.SOUND_EVENT.wrapAsHolder(sound), minDelay, maxDelay,
+                replaceCurrentMusic));
         }
     }
 }

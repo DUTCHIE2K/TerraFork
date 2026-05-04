@@ -41,8 +41,19 @@ public class BukkitWorldHandle implements WorldHandle {
     @Override
     public synchronized @NotNull BlockState createBlockState(@NotNull String data) {
         org.bukkit.block.data.BlockData bukkitData = Bukkit.createBlockData(
-            data); // somehow bukkit managed to make this not thread safe! :)
+            sanitizeBlockData(data)); // somehow bukkit managed to make this not thread safe! :)
         return BukkitBlockState.newInstance(bukkitData);
+    }
+
+    private String sanitizeBlockData(String data) {
+        int blockEntityDataIndex = data.indexOf('{');
+        if(blockEntityDataIndex < 0) {
+            return data;
+        }
+
+        String sanitized = data.substring(0, blockEntityDataIndex);
+        logger.debug("Stripped block entity data from block state string {}", data);
+        return sanitized;
     }
 
     @Override

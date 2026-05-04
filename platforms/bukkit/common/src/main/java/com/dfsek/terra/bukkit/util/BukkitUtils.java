@@ -20,8 +20,9 @@ public class BukkitUtils {
     }
 
     public static EntityType getEntityType(String id) {
-        if(!id.startsWith("minecraft:")) throw new IllegalArgumentException("Invalid entity identifier " + id);
-        String entityID = id.toUpperCase(Locale.ROOT).substring(10);
+        String sanitized = sanitizeEntityIdentifier(id);
+        if(!sanitized.startsWith("minecraft:")) throw new IllegalArgumentException("Invalid entity identifier " + id);
+        String entityID = sanitized.toUpperCase(Locale.ROOT).substring(10);
 
         return new BukkitEntityType(switch(entityID) {
             case "END_CRYSTAL" -> org.bukkit.entity.EntityType.END_CRYSTAL;
@@ -29,5 +30,15 @@ public class BukkitUtils {
                 "Invalid entity identifier " + id); // make sure this issue can't happen the other way around.
             default -> org.bukkit.entity.EntityType.valueOf(entityID);
         });
+    }
+
+    private static String sanitizeEntityIdentifier(String id) {
+        int entityDataIndex = id.indexOf('{');
+        if(entityDataIndex < 0) {
+            return id;
+        }
+
+        logger.debug("Stripped entity data from entity identifier {}", id);
+        return id.substring(0, entityDataIndex);
     }
 }
