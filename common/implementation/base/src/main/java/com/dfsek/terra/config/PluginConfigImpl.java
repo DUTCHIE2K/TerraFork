@@ -49,6 +49,10 @@ public class PluginConfigImpl implements ConfigTemplate, PluginConfig {
     @Default
     private boolean debugProfiler = false;
 
+    @Value("debug.chunk-statistics")
+    @Default
+    private boolean debugChunkStatistics = false;
+
     @Value("debug.script")
     @Default
     private boolean debugScript = false;
@@ -107,6 +111,8 @@ public class PluginConfigImpl implements ConfigTemplate, PluginConfig {
             logger.info("Debug commands enabled.");
         if(debugProfiler)
             logger.info("Debug profiler enabled.");
+        if(debugChunkStatistics)
+            logger.info("Chunk statistics collection enabled.");
         if(debugScript)
             logger.info("Script debug blocks enabled.");
         if(debugLog)
@@ -127,6 +133,11 @@ public class PluginConfigImpl implements ConfigTemplate, PluginConfig {
     @Override
     public boolean isDebugProfiler() {
         return debugProfiler;
+    }
+
+    @Override
+    public boolean isDebugChunkStatistics() {
+        return debugChunkStatistics;
     }
 
     @Override

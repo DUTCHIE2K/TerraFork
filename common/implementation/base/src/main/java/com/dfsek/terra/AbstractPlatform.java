@@ -64,6 +64,7 @@ import com.dfsek.terra.api.profiler.Profiler;
 import com.dfsek.terra.api.registry.CheckedRegistry;
 import com.dfsek.terra.api.registry.Registry;
 import com.dfsek.terra.api.registry.key.StringIdentifiable;
+import com.dfsek.terra.api.statistics.ChunkStatisticsCollector;
 import com.dfsek.terra.api.util.generic.pair.Pair;
 import com.dfsek.terra.api.util.mutable.MutableBoolean;
 import com.dfsek.terra.api.util.reflection.TypeKey;
@@ -77,6 +78,7 @@ import com.dfsek.terra.registry.OpenRegistryImpl;
 import com.dfsek.terra.registry.master.ConfigRegistry;
 import com.dfsek.terra.registry.master.ConfigRegistry.PackLoadFailuresException;
 import com.dfsek.terra.registry.master.MetaConfigRegistry;
+import com.dfsek.terra.statistics.ChunkStatisticsCollectorImpl;
 
 
 /**
@@ -95,6 +97,7 @@ public abstract class AbstractPlatform implements Platform {
     private final CheckedRegistry<ConfigPack> checkedConfigRegistry = new CheckedRegistryImpl<>(configRegistry);
     private final CheckedRegistry<MetaPack> checkedMetaConfigRegistry = new CheckedRegistryImpl<>(metaConfigRegistry);
     private final Profiler profiler = new ProfilerImpl();
+    private final ChunkStatisticsCollectorImpl chunkStatistics = new ChunkStatisticsCollectorImpl();
     private final GenericLoaders loaders = new GenericLoaders(this);
     private final PluginConfigImpl config = new PluginConfigImpl();
     private final CheckedRegistry<BaseAddon> addonRegistry = new CheckedRegistryImpl<>(new OpenRegistryImpl<>(TypeKey.of(BaseAddon.class)));
@@ -177,6 +180,7 @@ public abstract class AbstractPlatform implements Platform {
         }
 
         config.load(this); // load config.yml
+        chunkStatistics.setEnabled(config.isDebugChunkStatistics());
 
 
         dumpResources(config.getIgnoredResources());
@@ -425,6 +429,11 @@ public abstract class AbstractPlatform implements Platform {
     @Override
     public @NotNull Profiler getProfiler() {
         return profiler;
+    }
+
+    @Override
+    public @NotNull ChunkStatisticsCollector getChunkStatistics() {
+        return chunkStatistics;
     }
 
     @Override

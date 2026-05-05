@@ -9,6 +9,7 @@ debug:
   commands: false
   log: false
   profiler: false
+  chunk-statistics: false
   script: false
   worldgen:
     structure-beard: true

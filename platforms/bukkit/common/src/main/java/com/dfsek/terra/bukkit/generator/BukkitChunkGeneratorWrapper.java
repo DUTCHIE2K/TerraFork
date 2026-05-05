@@ -29,27 +29,33 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Random;
 
+import com.dfsek.terra.api.statistics.ChunkStatisticsSession;
+import com.dfsek.terra.api.statistics.ChunkStatisticsWindows;
 import com.dfsek.terra.api.block.state.BlockState;
 import com.dfsek.terra.api.config.ConfigPack;
 import com.dfsek.terra.api.world.chunk.generation.ChunkGenerator;
 import com.dfsek.terra.api.world.chunk.generation.util.GeneratorWrapper;
 import com.dfsek.terra.api.world.info.WorldProperties;
+import com.dfsek.terra.bukkit.PlatformImpl;
+import com.dfsek.terra.statistics.ChunkStatisticsSupport;
 import com.dfsek.terra.bukkit.world.BukkitWorldProperties;
 
 
 public class BukkitChunkGeneratorWrapper extends org.bukkit.generator.ChunkGenerator implements GeneratorWrapper {
     private static final Logger LOGGER = LoggerFactory.getLogger(BukkitChunkGeneratorWrapper.class);
+    private final PlatformImpl platform;
     private final BlockState air;
     private final BukkitBlockPopulator blockPopulator;
     private ChunkGenerator delegate;
     private ConfigPack pack;
 
 
-    public BukkitChunkGeneratorWrapper(ChunkGenerator delegate, ConfigPack pack, BlockState air) {
+    public BukkitChunkGeneratorWrapper(PlatformImpl platform, ChunkGenerator delegate, ConfigPack pack, BlockState air) {
+        this.platform = platform;
         this.delegate = delegate;
         this.pack = pack;
         this.air = air;
-        this.blockPopulator = new BukkitBlockPopulator(pack, air);
+        this.blockPopulator = new BukkitBlockPopulator(platform, pack, air);
     }
 
     public void setDelegate(ChunkGenerator delegate) {
@@ -62,9 +68,18 @@ public class BukkitChunkGeneratorWrapper extends org.bukkit.generator.ChunkGener
     }
 
     @Override
+    @SuppressWarnings("try")
     public void generateNoise(@NotNull WorldInfo worldInfo, @NotNull Random random, int x, int z, @NotNull ChunkData chunkData) {
         BukkitWorldProperties properties = new BukkitWorldProperties(worldInfo);
-        delegate.generateChunkData(new BukkitProtoChunk(chunkData), properties, pack.getBiomeProvider(), x, z);
+        ChunkStatisticsSession session = ChunkStatisticsSupport.beginWindow(platform, pack, ChunkStatisticsWindows.BASE, x, z);
+        try(session) {
+            try(ChunkStatisticsSession.Activation activation = session.activate()) {
+                ChunkStatisticsSupport.generateBase(platform, delegate, new BukkitProtoChunk(chunkData), properties, pack.getBiomeProvider(), x, z);
+            } catch(RuntimeException | Error e) {
+                session.fail(e);
+                throw e;
+            }
+        }
     }
 
     @Override

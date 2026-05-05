@@ -20,6 +20,8 @@ import com.dfsek.terra.api.properties.PropertyKey;
 import com.dfsek.terra.api.registry.key.StringIdentifiable;
 import com.dfsek.terra.api.util.random.RandomGenerators;
 import com.dfsek.terra.api.structure.feature.Feature;
+import com.dfsek.terra.api.statistics.ChunkStatisticsCollector;
+import com.dfsek.terra.api.statistics.ChunkStatisticsPhases;
 import com.dfsek.terra.api.world.WritableWorld;
 import com.dfsek.terra.api.world.chunk.generation.ProtoWorld;
 import com.dfsek.terra.api.world.chunk.generation.stage.GenerationStage;
@@ -57,6 +59,8 @@ public class FeatureGenerationStage implements GenerationStage, StringIdentifiab
     @SuppressWarnings("try")
     public void populate(ProtoWorld world) {
         platform.getProfiler().push(profile);
+        ChunkStatisticsCollector statistics = platform.getChunkStatistics();
+        boolean collectStatistics = statistics.isEnabled();
         int cx = world.centerChunkX() << 4;
         int cz = world.centerChunkZ() << 4;
         long seed = world.getSeed();
@@ -84,18 +88,37 @@ public class FeatureGenerationStage implements GenerationStage, StringIdentifiab
                                         if(shouldSkipFeature(feature)) {
                                             return;
                                         }
-                                        platform.getProfiler().push(feature.getID());
-                                        if(feature.getDistributor().matches(x, z, seed)) {
-                                            feature.getLocator()
-                                                .getSuitableCoordinates(column.clamp(min, max))
-                                                .forEach(y -> feature.getStructure(world, x, y, z)
-                                                    .generate(Vector3Int.of(x, y, z),
-                                                        world,
-                                                        RandomGenerators.xoroshiro128PlusPlus(coordinateSeed * 31 + y),
-                                                        Rotation.NONE)
-                                                );
+                                        String featureId = feature.getID();
+                                        String featurePhase = collectStatistics ? ChunkStatisticsPhases.feature(featureId) : null;
+                                        if(collectStatistics) {
+                                            statistics.recordFeatureEvaluation(featureId);
+                                            statistics.pushPhase(featurePhase);
                                         }
-                                        platform.getProfiler().pop(feature.getID());
+                                        platform.getProfiler().push(featureId);
+                                        try {
+                                            if(feature.getDistributor().matches(x, z, seed)) {
+                                                if(collectStatistics) {
+                                                    statistics.recordFeatureMatch(featureId);
+                                                }
+                                                feature.getLocator()
+                                                    .getSuitableCoordinates(column.clamp(min, max))
+                                                    .forEach(y -> {
+                                                        if(collectStatistics) {
+                                                            statistics.recordFeaturePlacement(featureId);
+                                                        }
+                                                        feature.getStructure(world, x, y, z)
+                                                            .generate(Vector3Int.of(x, y, z),
+                                                                world,
+                                                                RandomGenerators.xoroshiro128PlusPlus(coordinateSeed * 31 + y),
+                                                                Rotation.NONE);
+                                                    });
+                                            }
+                                        } finally {
+                                            platform.getProfiler().pop(featureId);
+                                            if(collectStatistics) {
+                                                statistics.popPhase(featurePhase);
+                                            }
+                                        }
                                     });
                             }
                         }

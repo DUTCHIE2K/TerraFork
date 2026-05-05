@@ -47,6 +47,8 @@ import com.dfsek.terra.api.registry.key.Keyed;
 import com.dfsek.terra.api.registry.key.RegistryKey;
 import com.dfsek.terra.api.structure.LootTable;
 import com.dfsek.terra.api.structure.Structure;
+import com.dfsek.terra.api.statistics.ChunkStatisticsCollector;
+import com.dfsek.terra.api.statistics.ChunkStatisticsPhases;
 import com.dfsek.terra.api.world.WritableWorld;
 
 
@@ -133,17 +135,39 @@ public class StructureScript implements Structure, Keyed<StructureScript> {
     @Override
     @SuppressWarnings("try")
     public boolean generate(Vector3Int location, WritableWorld world, RandomGenerator random, Rotation rotation) {
+        ChunkStatisticsCollector statistics = platform.getChunkStatistics();
+        boolean collectStatistics = statistics.isEnabled();
+        String statisticsPhase = collectStatistics ? ChunkStatisticsPhases.terraScript(id.toString()) : null;
+        if(collectStatistics) {
+            statistics.pushPhase(statisticsPhase);
+        }
         platform.getProfiler().push(profile);
-        boolean result = applyBlock(new TerraImplementationArguments(location, rotation, random, world, 0));
-        platform.getProfiler().pop(profile);
-        return result;
+        try {
+            return applyBlock(new TerraImplementationArguments(location, rotation, random, world, 0));
+        } finally {
+            platform.getProfiler().pop(profile);
+            if(collectStatistics) {
+                statistics.popPhase(statisticsPhase);
+            }
+        }
     }
 
     public boolean generate(Vector3Int location, WritableWorld world, RandomGenerator random, Rotation rotation, int recursions) {
+        ChunkStatisticsCollector statistics = platform.getChunkStatistics();
+        boolean collectStatistics = statistics.isEnabled();
+        String statisticsPhase = collectStatistics ? ChunkStatisticsPhases.terraScript(id.toString()) : null;
+        if(collectStatistics) {
+            statistics.pushPhase(statisticsPhase);
+        }
         platform.getProfiler().push(profile);
-        boolean result = applyBlock(new TerraImplementationArguments(location, rotation, random, world, recursions));
-        platform.getProfiler().pop(profile);
-        return result;
+        try {
+            return applyBlock(new TerraImplementationArguments(location, rotation, random, world, recursions));
+        } finally {
+            platform.getProfiler().pop(profile);
+            if(collectStatistics) {
+                statistics.popPhase(statisticsPhase);
+            }
+        }
     }
 
     private boolean applyBlock(TerraImplementationArguments arguments) {

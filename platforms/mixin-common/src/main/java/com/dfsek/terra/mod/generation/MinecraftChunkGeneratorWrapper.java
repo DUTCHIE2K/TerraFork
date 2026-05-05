@@ -47,9 +47,12 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 import com.dfsek.terra.api.block.state.BlockStateExtended;
 import com.dfsek.terra.api.config.ConfigPack;
+import com.dfsek.terra.api.statistics.ChunkStatisticsSession;
+import com.dfsek.terra.api.statistics.ChunkStatisticsWindows;
 import com.dfsek.terra.api.world.biome.generation.BiomeProvider;
 import com.dfsek.terra.api.world.chunk.generation.ChunkGenerator;
 import com.dfsek.terra.api.world.chunk.generation.ProtoChunk;
@@ -57,9 +60,11 @@ import com.dfsek.terra.api.world.chunk.generation.ProtoWorld;
 import com.dfsek.terra.api.world.chunk.generation.stage.Chunkified;
 import com.dfsek.terra.api.world.chunk.generation.util.GeneratorWrapper;
 import com.dfsek.terra.api.world.info.WorldProperties;
+import com.dfsek.terra.mod.CommonPlatform;
 import com.dfsek.terra.mod.config.PreLoadCompatibilityOptions;
 import com.dfsek.terra.mod.data.Codecs;
 import com.dfsek.terra.mod.mixin.access.StructureAccessorAccessor;
+import com.dfsek.terra.statistics.ChunkStatisticsSupport;
 import com.dfsek.terra.mod.util.MinecraftAdapter;
 import com.dfsek.terra.mod.util.SeedHack;
 
@@ -106,12 +111,31 @@ public class MinecraftChunkGeneratorWrapper extends net.minecraft.world.gen.chun
     }
 
     @Override
+    @SuppressWarnings("try")
     public CompletableFuture<Chunk> populateNoise(Blender blender, NoiseConfig noiseConfig, StructureAccessor structureAccessor,
                                                   Chunk chunk) {
         return CompletableFuture.supplyAsync(() -> {
             ProtoWorld world = (ProtoWorld) ((StructureAccessorAccessor) structureAccessor).getWorld();
             BiomeProvider biomeProvider = pack.getBiomeProvider();
-            delegate.generateChunkData((ProtoChunk) chunk, world, biomeProvider, chunk.getPos().x, chunk.getPos().z);
+            ChunkStatisticsSession session = ChunkStatisticsSupport.beginWindow(CommonPlatform.get(),
+                pack,
+                ChunkStatisticsWindows.BASE,
+                chunk.getPos().x,
+                chunk.getPos().z);
+            try(session) {
+                try(ChunkStatisticsSession.Activation activation = session.activate()) {
+                    ChunkStatisticsSupport.generateBase(CommonPlatform.get(),
+                        delegate,
+                        (ProtoChunk) chunk,
+                        world,
+                        biomeProvider,
+                        chunk.getPos().x,
+                        chunk.getPos().z);
+                } catch(RuntimeException | Error e) {
+                    session.fail(e);
+                    throw e;
+                }
+            }
 
             PreLoadCompatibilityOptions compatibilityOptions = pack.getContext().get(PreLoadCompatibilityOptions.class);
             if(compatibilityOptions.isBeard()) {
@@ -159,13 +183,24 @@ public class MinecraftChunkGeneratorWrapper extends net.minecraft.world.gen.chun
     }
 
     @Override
+    @SuppressWarnings("try")
     public void generateFeatures(StructureWorldAccess world, Chunk chunk, StructureAccessor structureAccessor) {
         super.generateFeatures(world, chunk, structureAccessor);
-        pack.getStages().forEach(populator -> {
-            if(!(populator instanceof Chunkified)) {
-                populator.populate((ProtoWorld) world);
+        ChunkStatisticsSession session = ChunkStatisticsSupport.beginWindow(CommonPlatform.get(),
+            pack,
+            ChunkStatisticsWindows.STAGES,
+            chunk.getPos().x,
+            chunk.getPos().z);
+        try(session) {
+            try(ChunkStatisticsSession.Activation activation = session.activate()) {
+                ChunkStatisticsSupport.runStages(CommonPlatform.get(),
+                    pack.getStages().stream().filter(populator -> !(populator instanceof Chunkified)).collect(Collectors.toList()),
+                    (ProtoWorld) world);
+            } catch(RuntimeException | Error e) {
+                session.fail(e);
+                throw e;
             }
-        });
+        }
     }
 
     @Override

@@ -23,17 +23,22 @@ import com.dfsek.terra.api.block.state.BlockState;
 import com.dfsek.terra.api.config.ConfigPack;
 import com.dfsek.terra.api.entity.Entity;
 import com.dfsek.terra.api.entity.EntityType;
+import com.dfsek.terra.api.statistics.ChunkStatisticsSession;
+import com.dfsek.terra.api.statistics.ChunkStatisticsWindows;
 import com.dfsek.terra.api.util.generic.pair.Pair;
 import com.dfsek.terra.api.world.ServerWorld;
 import com.dfsek.terra.api.world.biome.generation.BiomeProvider;
 import com.dfsek.terra.api.world.chunk.generation.ChunkGenerator;
 import com.dfsek.terra.api.world.chunk.generation.ProtoWorld;
+import com.dfsek.terra.cli.CLIPlatform;
 import com.dfsek.terra.cli.NBTSerializable;
+import com.dfsek.terra.statistics.ChunkStatisticsSupport;
 import com.dfsek.terra.cli.world.chunk.CLIChunk;
 
 
 public class CLIWorld implements ServerWorld, NBTSerializable<Stream<Pair<Vector2Int, MCAFile>>> {
     private static final Logger LOGGER = LoggerFactory.getLogger(CLIWorld.class);
+    private final CLIPlatform platform;
     private final Region[] regions;
     private final Region[] negativeRegions;
     private final int size;
@@ -48,11 +53,13 @@ public class CLIWorld implements ServerWorld, NBTSerializable<Stream<Pair<Vector
 
     private final ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() - 1);
 
-    public CLIWorld(int size,
+    public CLIWorld(CLIPlatform platform,
+                    int size,
                     long seed,
                     int maxHeight,
                     int minHeight,
                     ConfigPack pack, boolean noSave) {
+        this.platform = platform;
         this.size = size;
         this.maxHeight = maxHeight;
         this.minHeight = minHeight;
@@ -74,6 +81,7 @@ public class CLIWorld implements ServerWorld, NBTSerializable<Stream<Pair<Vector
         }
     }
 
+    @SuppressWarnings("try")
     public void generate() {
         ArrayList<Double> CPSHistory = new ArrayList<>();
         int sizeChunks = size * 32;
@@ -94,9 +102,21 @@ public class CLIWorld implements ServerWorld, NBTSerializable<Stream<Pair<Vector
                         }
 
                         BiomeProvider cachingBiomeProvider = pack.getBiomeProvider();
-                        chunkGenerator.generateChunkData(chunk, this, cachingBiomeProvider, finalX, finalZ);
-                        CLIProtoWorld protoWorld = new CLIProtoWorld(this, cachingBiomeProvider, finalX, finalZ);
-                        pack.getStages().forEach(stage -> stage.populate(protoWorld));
+                        ChunkStatisticsSession session = ChunkStatisticsSupport.beginWindow(platform,
+                            pack,
+                            ChunkStatisticsWindows.PIPELINE,
+                            finalX,
+                            finalZ);
+                        try(session) {
+                            try(ChunkStatisticsSession.Activation activation = session.activate()) {
+                                ChunkStatisticsSupport.generateBase(platform, chunkGenerator, chunk, this, cachingBiomeProvider, finalX, finalZ);
+                                CLIProtoWorld protoWorld = new CLIProtoWorld(this, cachingBiomeProvider, finalX, finalZ);
+                                ChunkStatisticsSupport.runStages(platform, pack.getStages(), protoWorld);
+                            } catch(RuntimeException | Error e) {
+                                session.fail(e);
+                                throw e;
+                            }
+                        }
                         if(num % 240 == 239) {
                             long time = System.nanoTime();
                             double cps = num / ((double) (time - start.get()) / 1000000000);

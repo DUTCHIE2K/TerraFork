@@ -22,6 +22,7 @@ import com.dfsek.terra.api.handle.WorldHandle;
 import com.dfsek.terra.api.profiler.Profiler;
 import com.dfsek.terra.api.registry.CheckedRegistry;
 import com.dfsek.terra.api.registry.Registry;
+import com.dfsek.terra.api.statistics.ChunkStatisticsCollector;
 import com.dfsek.terra.api.tectonic.LoaderRegistrar;
 
 
@@ -86,6 +87,10 @@ public interface Platform extends LoaderRegistrar {
     @NotNull
     @Contract(pure = true)
     Profiler getProfiler();
+
+    @NotNull
+    @Contract(pure = true)
+    ChunkStatisticsCollector getChunkStatistics();
 
     @Contract(pure = true)
     int getGenerationThreads();

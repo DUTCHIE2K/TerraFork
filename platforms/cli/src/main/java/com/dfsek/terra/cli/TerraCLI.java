@@ -53,7 +53,7 @@ public final class TerraCLI implements Callable<Integer> {
 
         ConfigPack generate = platform.getConfigRegistry().getByID(pack).orElseThrow();
 
-        CLIWorld world = new CLIWorld(size, seed, maxHeight, minHeight, generate, noSave);
+        CLIWorld world = new CLIWorld(platform, size, seed, maxHeight, minHeight, generate, noSave);
 
         world.generate();
 
