@@ -50,9 +50,11 @@ public class ChunkInterpolator {
         double[][][] noiseStorage = new double[5][5][size + 1];
 
         int maxBlendAndChunk = 17 + 2 * maxBlend;
+        int columnCount = maxBlendAndChunk * maxBlendAndChunk;
 
         @SuppressWarnings("unchecked")
-        Column<Biome>[] columns = new Column[maxBlendAndChunk * maxBlendAndChunk];
+        Column<Biome>[] columns = (Column<Biome>[]) new Column<?>[columnCount];
+        BiomeNoiseProperties[][] noiseProperties = new BiomeNoiseProperties[columnCount][];
 
         for(int x = 0; x < 5; x++) {
             int scaledX = x << 2;
@@ -62,18 +64,21 @@ public class ChunkInterpolator {
                 int absoluteZ = zOrigin + scaledZ;
 
                 int index = (scaledX + maxBlend) + maxBlendAndChunk * (scaledZ + maxBlend);
-                Column<Biome> biomeColumn = columns[index];
-
-                if(biomeColumn == null) {
-                    biomeColumn = provider.getColumn(absoluteX, absoluteZ, seed, min, max);
-                    columns[index] = biomeColumn;
-                }
-
                 for(int y = 0; y < size; y++) {
                     int scaledY = (y << 2) + min;
-                    BiomeNoiseProperties generationSettings = biomeColumn.get(scaledY)
-                        .getContext()
-                        .get(noisePropertiesKey);
+                    BiomeNoiseProperties generationSettings = getNoiseProperties(columns,
+                        noiseProperties,
+                        size,
+                        index,
+                        y,
+                        scaledY,
+                        provider,
+                        absoluteX,
+                        absoluteZ,
+                        seed,
+                        min,
+                        max,
+                        noisePropertiesKey);
 
                     int step = generationSettings.blendStep();
                     int blend = generationSettings.blendDistance();
@@ -87,17 +92,19 @@ public class ChunkInterpolator {
                             int blendZ = (zi * step);
 
                             int localIndex = (scaledX + maxBlend + blendX) + maxBlendAndChunk * (scaledZ + maxBlend + blendZ);
-                            Column<Biome> column = columns[localIndex];
-
-                            if(column == null) {
-                                column = provider.getColumn(absoluteX + blendX, absoluteZ + blendZ, seed, min, max);
-                                columns[localIndex] = column;
-                            }
-
-                            BiomeNoiseProperties properties = column
-                                .get(scaledY)
-                                .getContext()
-                                .get(noisePropertiesKey);
+                            BiomeNoiseProperties properties = getNoiseProperties(columns,
+                                noiseProperties,
+                                size,
+                                localIndex,
+                                y,
+                                scaledY,
+                                provider,
+                                absoluteX + blendX,
+                                absoluteZ + blendZ,
+                                seed,
+                                min,
+                                max,
+                                noisePropertiesKey);
                             double sample = properties.noiseHolder().getNoise(properties.base(), absoluteX, scaledY, absoluteZ, seed);
                             runningNoise += sample * properties.blendWeight();
                             runningDiv += properties.blendWeight();
@@ -129,6 +136,37 @@ public class ChunkInterpolator {
                 }
             }
         }
+    }
+
+    private static Column<Biome> getColumn(Column<Biome>[] columns, int index, BiomeProvider provider, int x, int z, long seed, int min,
+                                           int max) {
+        Column<Biome> column = columns[index];
+        if(column == null) {
+            column = provider.getColumn(x, z, seed, min, max);
+            columns[index] = column;
+        }
+        return column;
+    }
+
+    private static BiomeNoiseProperties getNoiseProperties(Column<Biome>[] columns, BiomeNoiseProperties[][] noiseProperties,
+                                                           int size, int columnIndex, int yIndex, int y, BiomeProvider provider,
+                                                           int x, int z, long seed, int min, int max,
+                                                           PropertyKey<BiomeNoiseProperties> noisePropertiesKey) {
+        BiomeNoiseProperties[] columnProperties = noiseProperties[columnIndex];
+        if(columnProperties == null) {
+            columnProperties = new BiomeNoiseProperties[size];
+            noiseProperties[columnIndex] = columnProperties;
+        }
+
+        BiomeNoiseProperties properties = columnProperties[yIndex];
+        if(properties == null) {
+            properties = getColumn(columns, columnIndex, provider, x, z, seed, min, max)
+                .get(y)
+                .getContext()
+                .get(noisePropertiesKey);
+            columnProperties[yIndex] = properties;
+        }
+        return properties;
     }
 
     private static int reRange(int value, int high) {

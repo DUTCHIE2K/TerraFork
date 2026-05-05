@@ -9,13 +9,16 @@ import com.dfsek.terra.api.world.biome.generation.BiomeProvider;
 
 
 public class LazilyEvaluatedInterpolator {
-    private final Double[] samples; //
+    private final double[] samples;
+    private final boolean[] sampled;
 
     private final int chunkX;
     private final int chunkZ;
 
     private final int horizontalRes;
     private final int verticalRes;
+    private final double horizontalResInverse;
+    private final double verticalResInverse;
 
     private final BiomeProvider biomeProvider;
     private final PropertyKey<BiomeNoiseProperties> noisePropertiesKey;
@@ -33,35 +36,42 @@ public class LazilyEvaluatedInterpolator {
         int vSamples = FloatingPointFunctions.ceil((double) (max - min) / verticalRes);
         this.zMul = (hSamples + 1);
         this.yMul = zMul * zMul;
-        samples = new Double[yMul * (vSamples + 1)];
+        int sampleCount = yMul * (vSamples + 1);
+        samples = new double[sampleCount];
+        sampled = new boolean[sampleCount];
         this.chunkX = cx << 4;
         this.chunkZ = cz << 4;
         this.horizontalRes = horizontalRes;
         this.verticalRes = verticalRes;
+        this.horizontalResInverse = 1D / horizontalRes;
+        this.verticalResInverse = 1D / verticalRes;
         this.biomeProvider = biomeProvider;
         this.seed = seed;
         this.min = min;
         this.max = max - 1;
     }
 
-    private double sample(int xIndex, int yIndex, int zIndex, int ox, int oy, int oz) {
+    private double loadSample(int xIndex, int yIndex, int zIndex, int ox, int oy, int oz) {
         int index = xIndex + (zIndex * zMul) + (yIndex * yMul);
-        Double sample = samples[index];
-        if(sample == null) {
+        if(!sampled[index]) {
             int xi = ox + chunkX;
             int zi = oz + chunkZ;
 
             int y = Math.min(max, oy);
 
-            sample = biomeProvider
+            samples[index] = biomeProvider
                 .getBiome(xi, y, zi, seed)
                 .getContext()
                 .get(noisePropertiesKey)
                 .carving()
                 .getSample(seed, xi, y, zi);
-            samples[index] = sample;
+            sampled[index] = true;
         }
-        return sample;
+        return samples[index];
+    }
+
+    private static int positiveRemainder(int value, int divisor) {
+        return Math.floorMod(value, divisor);
     }
 
     public double sample(int x, int y, int z) {
@@ -69,38 +79,39 @@ public class LazilyEvaluatedInterpolator {
         int yIndex = (y - min) / verticalRes;
         int zIndex = z / horizontalRes;
 
-        double sample_0_0_0 = sample(xIndex, yIndex, zIndex, x, y, z);
+        double sample_0_0_0 = loadSample(xIndex, yIndex, zIndex, x, y, z);
 
-        boolean yRange = y % verticalRes == 0;
-        if(x % horizontalRes == 0 && yRange && z % horizontalRes == 0) { // we're at the sampling point
+        int xRemainder = x % horizontalRes;
+        boolean yAligned = y % verticalRes == 0;
+        int zRemainder = z % horizontalRes;
+
+        if(xRemainder == 0 && yAligned && zRemainder == 0) { // we're at the sampling point
             return sample_0_0_0;
         }
 
-        double sample_0_0_1 = sample(xIndex, yIndex, zIndex + 1, x, y, z + horizontalRes);
+        double sample_0_0_1 = loadSample(xIndex, yIndex, zIndex + 1, x, y, z + horizontalRes);
+        double sample_1_0_0 = loadSample(xIndex + 1, yIndex, zIndex, x + horizontalRes, y, z);
+        double sample_1_0_1 = loadSample(xIndex + 1, yIndex, zIndex + 1, x + horizontalRes, y, z + horizontalRes);
 
-        double sample_1_0_0 = sample(xIndex + 1, yIndex, zIndex, x + horizontalRes, y, z);
-        double sample_1_0_1 = sample(xIndex + 1, yIndex, zIndex + 1, x + horizontalRes, y, z + horizontalRes);
-
-        double xFrac = (double) (x % horizontalRes) / horizontalRes;
-        double zFrac = (double) (z % horizontalRes) / horizontalRes;
+        double xFrac = xRemainder * horizontalResInverse;
+        double zFrac = zRemainder * horizontalResInverse;
         double lerp_bottom_0 = InterpolationFunctions.lerp(sample_0_0_0, sample_0_0_1, zFrac);
         double lerp_bottom_1 = InterpolationFunctions.lerp(sample_1_0_0, sample_1_0_1, zFrac);
 
         double lerp_bottom = InterpolationFunctions.lerp(lerp_bottom_0, lerp_bottom_1, xFrac);
 
-        if(yRange) { // we can do bilerp
+        if(yAligned) { // we can do bilerp
             return lerp_bottom;
         }
 
-        double yFrac = (double) Math.floorMod(y, verticalRes) / verticalRes;
+        double yFrac = positiveRemainder(y, verticalRes) * verticalResInverse;
+
+        double sample_0_1_0 = loadSample(xIndex, yIndex + 1, zIndex, x, y + verticalRes, z);
+        double sample_0_1_1 = loadSample(xIndex, yIndex + 1, zIndex + 1, x, y + verticalRes, z + horizontalRes);
 
 
-        double sample_0_1_0 = sample(xIndex, yIndex + 1, zIndex, x, y + verticalRes, z);
-        double sample_0_1_1 = sample(xIndex, yIndex + 1, zIndex + 1, x, y + verticalRes, z + horizontalRes);
-
-
-        double sample_1_1_0 = sample(xIndex + 1, yIndex + 1, zIndex, x + horizontalRes, y + verticalRes, z);
-        double sample_1_1_1 = sample(xIndex + 1, yIndex + 1, zIndex + 1, x + horizontalRes, y + verticalRes, z + horizontalRes);
+        double sample_1_1_0 = loadSample(xIndex + 1, yIndex + 1, zIndex, x + horizontalRes, y + verticalRes, z);
+        double sample_1_1_1 = loadSample(xIndex + 1, yIndex + 1, zIndex + 1, x + horizontalRes, y + verticalRes, z + horizontalRes);
 
         double lerp_top_0 = InterpolationFunctions.lerp(sample_0_1_0, sample_0_1_1, zFrac);
         double lerp_top_1 = InterpolationFunctions.lerp(sample_1_1_0, sample_1_1_1, zFrac);
