@@ -39,6 +39,7 @@ import com.dfsek.terra.api.world.biome.PlatformBiome;
 import com.dfsek.terra.bukkit.generator.BukkitChunkGeneratorWrapper;
 import com.dfsek.terra.bukkit.handles.BukkitItemHandle;
 import com.dfsek.terra.bukkit.handles.BukkitWorldHandle;
+import com.dfsek.terra.bukkit.util.BukkitUtils;
 import com.dfsek.terra.bukkit.world.BukkitPlatformBiome;
 
 
@@ -118,7 +119,7 @@ public class PlatformImpl extends AbstractPlatform {
         super.register(registry);
         registry.registerLoader(BlockState.class, (type, o, loader, depthTracker) -> handle.createBlockState((String) o))
             .registerLoader(PlatformBiome.class, (type, o, loader, depthTracker) -> parseBiome((String) o, depthTracker))
-            .registerLoader(EntityType.class, (type, o, loader, depthTracker) -> EntityType.valueOf((String) o));
+            .registerLoader(EntityType.class, (type, o, loader, depthTracker) -> BukkitUtils.getBukkitEntityType((String) o));
 
     }
 

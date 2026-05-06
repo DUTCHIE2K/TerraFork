@@ -22,14 +22,22 @@ public class BukkitUtils {
     public static EntityType getEntityType(String id) {
         String sanitized = sanitizeEntityIdentifier(id);
         if(!sanitized.startsWith("minecraft:")) throw new IllegalArgumentException("Invalid entity identifier " + id);
-        String entityID = sanitized.toUpperCase(Locale.ROOT).substring(10);
+        return new BukkitEntityType(getBukkitEntityType(sanitized));
+    }
 
-        return new BukkitEntityType(switch(entityID) {
+    public static org.bukkit.entity.EntityType getBukkitEntityType(String id) {
+        String sanitized = sanitizeEntityIdentifier(id);
+        String entityID = sanitized.toUpperCase(Locale.ROOT);
+        if(entityID.startsWith("MINECRAFT:")) {
+            entityID = entityID.substring("MINECRAFT:".length());
+        }
+
+        return switch(entityID) {
             case "END_CRYSTAL" -> org.bukkit.entity.EntityType.END_CRYSTAL;
             case "ENDER_CRYSTAL" -> throw new IllegalArgumentException(
                 "Invalid entity identifier " + id); // make sure this issue can't happen the other way around.
             default -> org.bukkit.entity.EntityType.valueOf(entityID);
-        });
+        };
     }
 
     private static String sanitizeEntityIdentifier(String id) {

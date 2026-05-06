@@ -17,9 +17,46 @@
 
 package com.dfsek.terra.bukkit.util;
 
+import java.util.Locale;
+
+
 public final class MinecraftUtils {
     public static String stripMinecraftNamespace(String in) {
         if(in.startsWith("minecraft:")) return in.substring("minecraft:".length());
         return in;
+    }
+
+    public static String normalizeBlockData(String data) {
+        int blockStateIndex = data.indexOf('[');
+        if(blockStateIndex < 0) {
+            return normalizeBlockIdentifier(data);
+        }
+        return normalizeBlockIdentifier(data.substring(0, blockStateIndex)) + data.substring(blockStateIndex);
+    }
+
+    public static String normalizeBlockIdentifier(String identifier) {
+        int namespaceSeparator = identifier.indexOf(':');
+        if(namespaceSeparator < 0) {
+            return normalizeMinecraftBlockPath(identifier);
+        }
+
+        String namespace = identifier.substring(0, namespaceSeparator);
+        if(!namespace.equals("minecraft")) {
+            return identifier;
+        }
+
+        String path = identifier.substring(namespaceSeparator + 1);
+        String normalized = normalizeMinecraftBlockPath(path);
+        if(normalized.equals(path)) {
+            return identifier;
+        }
+        return namespace + ":" + normalized;
+    }
+
+    private static String normalizeMinecraftBlockPath(String path) {
+        return switch(path.toLowerCase(Locale.ROOT)) {
+            case "chain" -> "iron_chain";
+            default -> path;
+        };
     }
 }

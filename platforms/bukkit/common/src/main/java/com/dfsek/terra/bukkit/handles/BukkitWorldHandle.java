@@ -27,6 +27,7 @@ import com.dfsek.terra.api.block.state.BlockState;
 import com.dfsek.terra.api.entity.EntityType;
 import com.dfsek.terra.api.handle.WorldHandle;
 import com.dfsek.terra.bukkit.util.BukkitUtils;
+import com.dfsek.terra.bukkit.util.MinecraftUtils;
 import com.dfsek.terra.bukkit.world.block.data.BukkitBlockState;
 
 
@@ -47,13 +48,17 @@ public class BukkitWorldHandle implements WorldHandle {
 
     private String sanitizeBlockData(String data) {
         int blockEntityDataIndex = data.indexOf('{');
-        if(blockEntityDataIndex < 0) {
-            return data;
+        String sanitized = data;
+        if(blockEntityDataIndex >= 0) {
+            sanitized = data.substring(0, blockEntityDataIndex);
+            logger.debug("Stripped block entity data from block state string {}", data);
         }
 
-        String sanitized = data.substring(0, blockEntityDataIndex);
-        logger.debug("Stripped block entity data from block state string {}", data);
-        return sanitized;
+        String normalized = MinecraftUtils.normalizeBlockData(sanitized);
+        if(!normalized.equals(sanitized)) {
+            logger.debug("Normalized block state string {} to {}", sanitized, normalized);
+        }
+        return normalized;
     }
 
     @Override
