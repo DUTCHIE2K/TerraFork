@@ -31,6 +31,7 @@ import com.dfsek.terra.api.config.PluginConfig;
 import com.dfsek.terra.api.statistics.ChunkStatisticsPhases;
 import com.dfsek.terra.api.statistics.ChunkStatisticsWindows;
 import com.dfsek.terra.api.world.biome.generation.BiomeProvider;
+import com.dfsek.terra.api.world.chunk.generation.GeneratedColumn;
 import com.dfsek.terra.api.world.info.WorldProperties;
 import com.dfsek.terra.bukkit.config.PreLoadCompatibilityOptions;
 import com.dfsek.terra.statistics.ChunkStatisticsSupport;
@@ -167,12 +168,13 @@ public class NMSChunkGeneratorDelegate extends ChunkGenerator {
             Math.floorDiv(x, 16),
             Math.floorDiv(z, 16),
             () -> {
-                int y = properties.getMaxHeight();
-                while(y >= getMinY() && !heightmap.isOpaque().test(
-                    ((CraftBlockData) delegate.getBlock(properties, x, y - 1, z, biomeProvider).getHandle()).getState())) {
-                    y--;
+                GeneratedColumn column = delegate.getColumn(properties, x, z, biomeProvider);
+                for(int y = column.getMaxY() - 1; y >= column.getMinY(); y--) {
+                    if(heightmap.isOpaque().test(((CraftBlockData) column.getBlock(y).getHandle()).getState())) {
+                        return y + 1;
+                    }
                 }
-                return y;
+                return column.getMinY();
             });
     }
 
@@ -187,12 +189,13 @@ public class NMSChunkGeneratorDelegate extends ChunkGenerator {
             Math.floorDiv(x, 16),
             Math.floorDiv(z, 16),
             () -> {
-                BlockState[] array = new BlockState[world.getHeight()];
-                for(int y = properties.getMaxHeight(); y >= properties.getMinHeight(); y--) {
-                    array[y - properties.getMinHeight()] = ((CraftBlockData) delegate.getBlock(properties, x, y, z, biomeProvider)
-                        .getHandle()).getState();
+                GeneratedColumn column = delegate.getColumn(properties, x, z, biomeProvider);
+                com.dfsek.terra.api.block.state.BlockState[] generated = column.getBlockStates();
+                BlockState[] array = new BlockState[generated.length];
+                for(int y = column.getMinY(); y < column.getMaxY(); y++) {
+                    array[y - column.getMinY()] = ((CraftBlockData) generated[y - column.getMinY()].getHandle()).getState();
                 }
-                return new NoiseColumn(getMinY(), array);
+                return new NoiseColumn(column.getMinY(), array);
             });
     }
 

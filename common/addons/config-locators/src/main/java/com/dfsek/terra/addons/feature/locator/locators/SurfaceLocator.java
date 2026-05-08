@@ -27,10 +27,13 @@ public class SurfaceLocator implements Locator {
         int max = Math.min(search.getMax(), column.getMaxY());
         int min = Math.max(search.getMin(), column.getMinY());
         if(min >= max) return builder.build();
+        boolean previousAir = column.getBlock(min - 1).isAir();
         for(int y = min; y < max; y++) {
-            if(column.getBlock(y).isAir() && !column.getBlock(y - 1).isAir()) {
+            boolean currentAir = column.getBlock(y).isAir();
+            if(currentAir && !previousAir) {
                 builder.set(y);
             }
+            previousAir = currentAir;
         }
         return builder.build();
     }

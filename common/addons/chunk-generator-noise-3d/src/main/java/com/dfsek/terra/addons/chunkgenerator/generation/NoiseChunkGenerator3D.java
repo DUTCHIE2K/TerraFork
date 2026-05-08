@@ -25,6 +25,7 @@ import com.dfsek.terra.api.util.Column;
 import com.dfsek.terra.api.world.biome.Biome;
 import com.dfsek.terra.api.world.biome.generation.BiomeProvider;
 import com.dfsek.terra.api.world.chunk.generation.ChunkGenerator;
+import com.dfsek.terra.api.world.chunk.generation.GeneratedColumn;
 import com.dfsek.terra.api.world.chunk.generation.ProtoChunk;
 import com.dfsek.terra.api.world.chunk.generation.util.Palette;
 import com.dfsek.terra.api.world.info.WorldProperties;
@@ -141,6 +142,39 @@ public class NoiseChunkGenerator3D implements ChunkGenerator {
             }
         }
         platform.getProfiler().pop("chunk_base_3d");
+    }
+
+    @Override
+    public GeneratedColumn getColumn(@NotNull WorldProperties world, int x, int z, @NotNull BiomeProvider biomeProvider) {
+        int minHeight = world.getMinHeight();
+        int maxHeight = world.getMaxHeight();
+        int fdX = Math.floorMod(x, 16);
+        int fdZ = Math.floorMod(z, 16);
+
+        Sampler3D sampler = samplerCache.get(x, z, world, biomeProvider);
+        Column<Biome> biomeColumn = biomeProvider.getColumn(x, z, world);
+
+        BlockState[] states = new BlockState[maxHeight - minHeight];
+        long seed = world.getSeed();
+        int paletteLevel = 0;
+
+        for(int y = maxHeight - 1; y >= minHeight; y--) {
+            Biome biome = biomeColumn.get(y);
+            BiomePaletteInfo paletteInfo = biome.getContext().get(paletteInfoPropertyKey);
+
+            if(sampler.sample(fdX, y, fdZ) > 0) {
+                Palette palette = paletteAt(fdX, y, fdZ, sampler, paletteInfo, 0);
+                states[y - minHeight] = palette.get(paletteLevel, x, y, z, seed);
+                paletteLevel++;
+            } else if(y <= paletteInfo.seaLevel()) {
+                states[y - minHeight] = paletteInfo.ocean().get(paletteInfo.seaLevel() - y, x, y, z, seed);
+                paletteLevel = 0;
+            } else {
+                states[y - minHeight] = air;
+                paletteLevel = 0;
+            }
+        }
+        return new GeneratedColumn(minHeight, states);
     }
 
     @Override

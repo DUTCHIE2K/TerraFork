@@ -56,6 +56,7 @@ import com.dfsek.terra.api.statistics.ChunkStatisticsSession;
 import com.dfsek.terra.api.statistics.ChunkStatisticsWindows;
 import com.dfsek.terra.api.world.biome.generation.BiomeProvider;
 import com.dfsek.terra.api.world.chunk.generation.ChunkGenerator;
+import com.dfsek.terra.api.world.chunk.generation.GeneratedColumn;
 import com.dfsek.terra.api.world.chunk.generation.ProtoChunk;
 import com.dfsek.terra.api.world.chunk.generation.ProtoWorld;
 import com.dfsek.terra.api.world.chunk.generation.stage.Chunkified;
@@ -242,15 +243,16 @@ public class MinecraftChunkGeneratorWrapper extends net.minecraft.world.gen.chun
             Math.floorDiv(x, 16),
             Math.floorDiv(z, 16),
             () -> {
-                for(int y = height.getTopYInclusive() - 1; y >= min; y--) {
-                    com.dfsek.terra.api.block.state.BlockState terraBlockState = delegate.getBlock(properties, x, y, z, biomeProvider);
+                GeneratedColumn column = delegate.getColumn(properties, x, z, biomeProvider);
+                for(int y = column.getMaxY() - 1; y >= column.getMinY(); y--) {
+                    com.dfsek.terra.api.block.state.BlockState terraBlockState = column.getBlock(y);
                     BlockState blockState =
                         (BlockState) (terraBlockState.isExtended() ? ((BlockStateExtended) terraBlockState).getState() : terraBlockState);
                     if(heightmap
                         .getBlockPredicate()
                         .test(blockState)) return y + 1;
                 }
-                return min;
+                return column.getMinY();
             });
     }
 
@@ -265,14 +267,15 @@ public class MinecraftChunkGeneratorWrapper extends net.minecraft.world.gen.chun
             Math.floorDiv(x, 16),
             Math.floorDiv(z, 16),
             () -> {
-                BlockState[] array = new BlockState[height.getHeight()];
-                for(int y = height.getTopYInclusive() - 1; y >= height.getBottomY(); y--) {
-                    com.dfsek.terra.api.block.state.BlockState terraBlockState = delegate.getBlock(properties, x, y, z, biomeProvider);
+                GeneratedColumn column = delegate.getColumn(properties, x, z, biomeProvider);
+                BlockState[] array = new BlockState[column.getHeight()];
+                for(int y = column.getMinY(); y < column.getMaxY(); y++) {
+                    com.dfsek.terra.api.block.state.BlockState terraBlockState = column.getBlock(y);
                     BlockState blockState =
                         (BlockState) (terraBlockState.isExtended() ? ((BlockStateExtended) terraBlockState).getState() : terraBlockState);
-                    array[y - height.getBottomY()] = blockState;
+                    array[y - column.getMinY()] = blockState;
                 }
-                return new VerticalBlockSample(height.getBottomY(), array);
+                return new VerticalBlockSample(column.getMinY(), array);
             });
     }
 

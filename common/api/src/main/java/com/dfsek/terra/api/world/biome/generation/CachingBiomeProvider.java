@@ -7,6 +7,7 @@ import com.github.benmanes.caffeine.cache.Scheduler;
 import java.util.Optional;
 
 import com.dfsek.terra.api.Handle;
+import com.dfsek.terra.api.util.Column;
 import com.dfsek.terra.api.util.cache.SeededVector2Key;
 import com.dfsek.terra.api.util.cache.SeededVector3Key;
 import com.dfsek.terra.api.util.generic.pair.Pair;
@@ -85,6 +86,15 @@ public class CachingBiomeProvider implements BiomeProvider, Handle {
         SeededVector2Key mutableKey = cachePair.getLeft();
         mutableKey.set(x, z, seed);
         return cachePair.getRight().get(mutableKey);
+    }
+
+    @Override
+    public Column<Biome> getColumn(int x, int z, long seed, int min, int max) {
+        Column<Biome> column = delegate.getColumn(x, z, seed, min, max);
+        if(column.getClass() == BiomeColumn.class) {
+            return new BiomeColumn(this, min, max, x, z, seed);
+        }
+        return column;
     }
 
     @Override

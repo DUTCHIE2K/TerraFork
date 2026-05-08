@@ -21,6 +21,16 @@ public interface ChunkGenerator {
     void generateChunkData(@NotNull ProtoChunk chunk, @NotNull WorldProperties world, @NotNull BiomeProvider biomeProvider,
                            int chunkX, int chunkZ);
 
+    default GeneratedColumn getColumn(@NotNull WorldProperties world, int x, int z, @NotNull BiomeProvider biomeProvider) {
+        int minHeight = world.getMinHeight();
+        int maxHeight = world.getMaxHeight();
+        BlockState[] states = new BlockState[maxHeight - minHeight];
+        for(int y = minHeight; y < maxHeight; y++) {
+            states[y - minHeight] = getBlock(world, x, y, z, biomeProvider);
+        }
+        return new GeneratedColumn(minHeight, states);
+    }
+
     BlockState getBlock(WorldProperties world, int x, int y, int z, BiomeProvider biomeProvider);
 
     default BlockState getBlock(WorldProperties world, Vector3 vector3, BiomeProvider biomeProvider) {

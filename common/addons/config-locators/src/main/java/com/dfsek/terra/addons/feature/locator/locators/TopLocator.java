@@ -22,10 +22,17 @@ public class TopLocator implements Locator {
 
     @Override
     public BinaryColumn getSuitableCoordinates(Column<?> column) {
-        for(int y = search.getMax(); y >= search.getMin(); y--) {
-            if(column.getBlock(y).isAir() && !column.getBlock(y - 1).isAir()) {
+        int max = Math.min(search.getMax(), column.getMaxY() - 1);
+        int min = Math.max(search.getMin(), column.getMinY());
+        if(min > max) return BinaryColumn.getNull();
+
+        boolean currentAir = column.getBlock(max).isAir();
+        for(int y = max; y >= min; y--) {
+            boolean belowAir = column.getBlock(y - 1).isAir();
+            if(currentAir && !belowAir) {
                 return new BinaryColumn(y, y + 1, yi -> true);
             }
+            currentAir = belowAir;
         }
         return BinaryColumn.getNull();
     }
