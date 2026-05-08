@@ -51,6 +51,7 @@ public final class TerraMinestomPlatform extends AbstractPlatform {
     private final ArrayList<BaseAddon> platformAddons = new ArrayList<>(List.of(new MinestomAddon(this)));
     private final MinestomUserDefinedBiomePool biomePool;
 
+    @SuppressWarnings("this-escape")
     public TerraMinestomPlatform(WorldHandle worldHandle, ItemHandle itemHandle, TypeLoader<PlatformBiome> biomeTypeLoader,
                                  BiomeFactory biomeFactory, BaseAddon... extraAddons) {
         this.worldHandle = worldHandle;
@@ -58,7 +59,7 @@ public final class TerraMinestomPlatform extends AbstractPlatform {
         this.biomeTypeLoader = biomeTypeLoader;
         this.biomePool = new MinestomUserDefinedBiomePool(biomeFactory);
         this.platformAddons.addAll(List.of(extraAddons));
-        load();
+        initializePlatform();
         getEventManager().callEvent(new PlatformInitializationEvent());
         initializeRegistry(); // Needs to be called before minecraft server bind
     }

@@ -70,6 +70,7 @@ public final class MinecraftUtil {
         return null;
     }
 
+    @SuppressWarnings("deprecation")
     public static void schedulePhysics(BlockState blockState, BlockPos blockPos, TickScheduler<Fluid> fluidScheduler,
                                        TickScheduler<Block> blockScheduler) {
         if(blockState.isLiquid()) {

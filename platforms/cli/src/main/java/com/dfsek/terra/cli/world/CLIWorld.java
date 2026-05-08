@@ -53,6 +53,7 @@ public class CLIWorld implements ServerWorld, NBTSerializable<Stream<Pair<Vector
 
     private final ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() - 1);
 
+    @SuppressWarnings("this-escape")
     public CLIWorld(CLIPlatform platform,
                     int size,
                     long seed,

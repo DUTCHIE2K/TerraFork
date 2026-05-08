@@ -19,6 +19,7 @@ public class CloudCommandSender implements CommandSender {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public void sendMessage(String message) {
         delegate.getSender().sendMessage(ChatColor.translateAlternateColorCodes('&', message));
     }

@@ -26,9 +26,15 @@ import java.util.stream.Collectors;
 
 import com.dfsek.terra.api.addon.BaseAddon;
 import com.dfsek.terra.lifecycle.LifecyclePlatform;
+import com.dfsek.terra.mod.CommonPlatform;
 
 
 public class QuiltPlatform extends LifecyclePlatform {
+    @SuppressWarnings("this-escape")
+    public QuiltPlatform() {
+        CommonPlatform.initialize(this);
+        initializePlatform();
+    }
 
     @Override
     protected Collection<BaseAddon> getPlatformMods() {

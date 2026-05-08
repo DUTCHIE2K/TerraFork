@@ -32,8 +32,9 @@ public class AllayPlatform extends AbstractPlatform {
     protected static final AllayWorldHandle ALLAY_WORLD_HANDLE = new AllayWorldHandle();
     protected static final AllayItemHandle ALLAY_ITEM_HANDLE = new AllayItemHandle();
 
+    @SuppressWarnings("this-escape")
     public AllayPlatform() {
-        load();
+        initializePlatform();
     }
 
     @Override

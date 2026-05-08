@@ -48,6 +48,7 @@ public final class ReflectionUtil {
         return result;
     }
 
+    @SuppressWarnings("deprecation")
     public static void setFinalField(Object obj, String fieldName, Object value) throws NoSuchFieldException {
         Field field = obj.getClass().getDeclaredField(fieldName);
         field.setAccessible(true);

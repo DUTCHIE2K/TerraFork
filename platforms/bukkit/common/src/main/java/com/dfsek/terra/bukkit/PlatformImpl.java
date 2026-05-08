@@ -42,7 +42,7 @@ import com.dfsek.terra.bukkit.handles.BukkitWorldHandle;
 import com.dfsek.terra.bukkit.world.BukkitPlatformBiome;
 
 
-public class PlatformImpl extends AbstractPlatform {
+public abstract class PlatformImpl extends AbstractPlatform {
     private static final Logger LOGGER = LoggerFactory.getLogger(PlatformImpl.class);
 
     private final ItemHandle itemHandle = new BukkitItemHandle();
@@ -53,13 +53,12 @@ public class PlatformImpl extends AbstractPlatform {
 
     private int generationThreads;
 
-    public PlatformImpl(TerraBukkitPlugin plugin) {
+    protected PlatformImpl(TerraBukkitPlugin plugin) {
         generationThreads = getMoonriseGenerationThreadsWithReflection();
         if(generationThreads == 0) {
             generationThreads = 1;
         }
         this.plugin = plugin;
-        load();
     }
 
     public TerraBukkitPlugin getPlugin() {

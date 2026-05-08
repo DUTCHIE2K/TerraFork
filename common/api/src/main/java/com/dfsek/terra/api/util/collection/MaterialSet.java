@@ -50,7 +50,10 @@ public class MaterialSet extends HashSet<BlockType> {
     }
 
     private static final class Singleton extends MaterialSet {
-        private final BlockType element;
+        @Serial
+        private static final long serialVersionUID = 4724754387920044593L;
+
+        private final transient BlockType element;
 
         Singleton(BlockType e) {
             element = e;
@@ -150,6 +153,11 @@ public class MaterialSet extends HashSet<BlockType> {
         @Override
         public int hashCode() {
             return Objects.hashCode(element);
+        }
+
+        @Serial
+        private Object writeReplace() {
+            return MaterialSet.get(element);
         }
     }
 }

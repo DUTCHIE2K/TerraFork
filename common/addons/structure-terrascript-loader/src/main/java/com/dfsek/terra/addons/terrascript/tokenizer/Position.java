@@ -7,7 +7,14 @@
 
 package com.dfsek.terra.addons.terrascript.tokenizer;
 
-public class Position {
+import java.io.Serial;
+import java.io.Serializable;
+
+
+public class Position implements Serializable {
+    @Serial
+    private static final long serialVersionUID = -7884369854835617574L;
+
     private final int line;
     private final int index;
 

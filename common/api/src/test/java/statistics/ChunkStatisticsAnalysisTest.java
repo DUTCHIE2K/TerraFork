@@ -19,6 +19,7 @@ class ChunkStatisticsAnalysisTest {
     void summarizesPercentilesAndTailAverage() {
         StatisticalSummary values = ChunkStatisticsAnalysis.summarizeLongs(List.of(1L, 2L, 3L, 4L, 5L, 100L));
         assertEquals(6, values.samples());
+        assertEquals(6, values.nonZeroSamples());
         assertEquals(19.166666666666668D, values.average());
         assertEquals(100D, values.percentile95());
         assertEquals(100D, values.onePercentLowAverage());
@@ -79,8 +80,11 @@ class ChunkStatisticsAnalysisTest {
         assertEquals(15D, summary.totalNanos().average());
         assertEquals(2, summary.phaseNanos().size());
         assertEquals(3D, summary.phaseNanos().get("chunk_base").average());
+        assertEquals(1, summary.phaseNanos().get("chunk_base").nonZeroSamples());
         assertEquals(4.5D, summary.phaseNanos().get("stage:flora").average());
+        assertEquals(1, summary.phaseNanos().get("stage:flora").nonZeroSamples());
         assertEquals(1D, summary.features().get("tree").evaluations().average());
+        assertEquals(1, summary.features().get("tree").evaluations().nonZeroSamples());
         assertEquals(0.5D, summary.features().get("tree").matches().average());
         assertEquals(0.5D, summary.features().get("tree").placements().average());
     }

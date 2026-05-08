@@ -119,7 +119,7 @@ public final class ChunkStatisticsAnalysis {
 
     public static StatisticalSummary summarizeLongs(List<Long> values) {
         if(values.isEmpty()) {
-            return new StatisticalSummary(0, 0D, 0D, 0D);
+            return new StatisticalSummary(0, 0D, 0D, 0D, 0);
         }
 
         List<Long> sorted = values.stream().sorted().toList();
@@ -128,7 +128,8 @@ public final class ChunkStatisticsAnalysis {
         double percentile95 = sorted.get(Math.min(size - 1, Math.max(0, (int) Math.ceil(size * 0.95D) - 1)));
         int tailCount = Math.max(1, (int) Math.ceil(size * 0.01D));
         double onePercentLowAverage = sorted.subList(size - tailCount, size).stream().mapToDouble(Long::doubleValue).average().orElse(0D);
-        return new StatisticalSummary(size, average, percentile95, onePercentLowAverage);
+        int nonZeroSamples = (int) values.stream().filter(value -> value != 0L).count();
+        return new StatisticalSummary(size, average, percentile95, onePercentLowAverage, nonZeroSamples);
     }
 
     private static List<String> orderedPhaseKeys(List<ChunkStatistics> statistics) {

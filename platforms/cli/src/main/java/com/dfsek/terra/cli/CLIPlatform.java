@@ -24,9 +24,10 @@ public class CLIPlatform extends AbstractPlatform {
 
     private final int generationThreads = Runtime.getRuntime().availableProcessors() - 1;
 
+    @SuppressWarnings("this-escape")
     public CLIPlatform() {
         LOGGER.info("Root directory: {}", getDataFolder().getAbsoluteFile());
-        load();
+        initializePlatform();
         LOGGER.info("Initialized Terra platform.");
     }
 

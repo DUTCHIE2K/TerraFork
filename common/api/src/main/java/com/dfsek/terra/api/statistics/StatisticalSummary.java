@@ -8,5 +8,11 @@
 package com.dfsek.terra.api.statistics;
 
 
-public record StatisticalSummary(int samples, double average, double percentile95, double onePercentLowAverage) {
+public record StatisticalSummary(int samples, double average, double percentile95, double onePercentLowAverage, int nonZeroSamples) {
+    public double activeRatio() {
+        if(samples == 0) {
+            return 0D;
+        }
+        return (double) nonZeroSamples / samples;
+    }
 }

@@ -18,9 +18,9 @@ public class SimpleRegistryMixin<T> implements RegistryHack {
     private Map<T, Reference<T>> valueToEntry;
 
     @Override
+    @SuppressWarnings("unchecked")
     public void terra_bind() {
         valueToEntry.forEach((value, entry) -> {
-            //noinspection unchecked
             ((RegistryEntryReferenceInvoker<T>) entry).invokeSetValue(value);
         });
     }

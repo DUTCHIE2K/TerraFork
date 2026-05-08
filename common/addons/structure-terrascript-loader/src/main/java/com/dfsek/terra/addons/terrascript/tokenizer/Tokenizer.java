@@ -27,6 +27,7 @@ public class Tokenizer {
     private Token current;
     private Token last;
 
+    @SuppressWarnings("this-escape")
     public Tokenizer(String data) {
         reader = new Lookahead(new StringReader(data + '\0'));
         current = fetchCheck();

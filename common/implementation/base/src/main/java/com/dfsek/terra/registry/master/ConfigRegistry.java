@@ -19,6 +19,7 @@ package com.dfsek.terra.registry.master;
 
 import java.io.IOException;
 import java.io.Serial;
+import java.util.ArrayList;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -64,10 +65,10 @@ public class ConfigRegistry extends OpenRegistryImpl<ConfigPack> {
         @Serial
         private static final long serialVersionUID = 538998844645186306L;
 
-        private final List<Throwable> exceptions;
+        private final ArrayList<Throwable> exceptions;
 
         public PackLoadFailuresException(List<? extends Throwable> exceptions) {
-            this.exceptions = (List<Throwable>) exceptions;
+            this.exceptions = new ArrayList<>(exceptions);
         }
 
         public List<Throwable> getExceptions() {

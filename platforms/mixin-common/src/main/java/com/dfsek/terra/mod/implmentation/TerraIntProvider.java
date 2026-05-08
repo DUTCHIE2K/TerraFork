@@ -12,7 +12,7 @@ import com.dfsek.terra.mod.util.MinecraftAdapter;
 
 
 public class TerraIntProvider extends IntProvider {
-    public static final Map<Class, IntProviderType> TERRA_RANGE_TYPE_TO_INT_PROVIDER_TYPE = new HashMap<>();
+    public static final Map<Class<? extends Range>, IntProviderType<?>> TERRA_RANGE_TYPE_TO_INT_PROVIDER_TYPE = new HashMap<>();
 
     public Range delegate;
 

@@ -13,6 +13,9 @@ import com.dfsek.terra.api.world.chunk.generation.stage.GenerationStage;
 
 public final class ChunkStatisticsPhases {
     public static final String CHUNK_BASE = "chunk_base";
+    public static final String HEIGHT = "height";
+    public static final String COLUMN = "column";
+    public static final String BEARD = "beard";
 
     private ChunkStatisticsPhases() {
     }

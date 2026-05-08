@@ -28,15 +28,19 @@ import java.util.concurrent.CompletableFuture;
 
 import com.dfsek.terra.api.config.ConfigPack;
 import com.dfsek.terra.api.config.PluginConfig;
+import com.dfsek.terra.api.statistics.ChunkStatisticsPhases;
+import com.dfsek.terra.api.statistics.ChunkStatisticsWindows;
 import com.dfsek.terra.api.world.biome.generation.BiomeProvider;
 import com.dfsek.terra.api.world.info.WorldProperties;
 import com.dfsek.terra.bukkit.config.PreLoadCompatibilityOptions;
+import com.dfsek.terra.statistics.ChunkStatisticsSupport;
 import com.dfsek.terra.bukkit.world.BukkitWorldProperties;
 import com.dfsek.terra.bukkit.world.block.data.BukkitBlockState;
 
 
 public class NMSChunkGeneratorDelegate extends ChunkGenerator {
     private static final Logger LOGGER = LoggerFactory.getLogger(NMSChunkGeneratorDelegate.class);
+    private final NMSPlatform platform;
     private final com.dfsek.terra.api.world.chunk.generation.ChunkGenerator delegate;
 
     private final ChunkGenerator vanilla;
@@ -45,9 +49,10 @@ public class NMSChunkGeneratorDelegate extends ChunkGenerator {
     private final long seed;
     private final PluginConfig pluginConfig;
 
-    public NMSChunkGeneratorDelegate(ChunkGenerator vanilla, ConfigPack pack, NMSBiomeProvider biomeProvider, long seed,
+    public NMSChunkGeneratorDelegate(NMSPlatform platform, ChunkGenerator vanilla, ConfigPack pack, NMSBiomeProvider biomeProvider, long seed,
                                      PluginConfig pluginConfig) {
         super(biomeProvider);
+        this.platform = platform;
         this.delegate = pack.getGeneratorProvider().newInstance(pack);
         this.vanilla = vanilla;
         this.pack = pack;
@@ -98,8 +103,17 @@ public class NMSChunkGeneratorDelegate extends ChunkGenerator {
                 BiomeProvider biomeProvider = pack.getBiomeProvider();
                 PreLoadCompatibilityOptions compatibilityOptions = pack.getContext().get(PreLoadCompatibilityOptions.class);
                 if(compatibilityOptions.isBeard() && pluginConfig.isDebugStructureBeardEnabled()) {
-                    beard(structureAccessor, chunk, new BukkitWorldProperties(level.getMinecraftWorld().getWorld()),
-                        biomeProvider, compatibilityOptions);
+                    ChunkStatisticsSupport.measureWindow(platform,
+                        pack,
+                        ChunkStatisticsWindows.BEARD,
+                        ChunkStatisticsPhases.BEARD,
+                        chunk.getPos().x,
+                        chunk.getPos().z,
+                        () -> beard(structureAccessor,
+                            chunk,
+                            new BukkitWorldProperties(level.getMinecraftWorld().getWorld()),
+                            biomeProvider,
+                            compatibilityOptions));
                 }
                 return c;
             });
@@ -145,25 +159,41 @@ public class NMSChunkGeneratorDelegate extends ChunkGenerator {
     @Override
     public int getBaseHeight(int x, int z, @NotNull Types heightmap, @NotNull LevelHeightAccessor world, @NotNull RandomState noiseConfig) {
         WorldProperties properties = new NMSWorldProperties(seed, world);
-        int y = properties.getMaxHeight();
         BiomeProvider biomeProvider = pack.getBiomeProvider();
-        while(y >= getMinY() && !heightmap.isOpaque().test(
-            ((CraftBlockData) delegate.getBlock(properties, x, y - 1, z, biomeProvider).getHandle()).getState())) {
-            y--;
-        }
-        return y;
+        return ChunkStatisticsSupport.measureWindow(platform,
+            pack,
+            ChunkStatisticsWindows.HEIGHT,
+            ChunkStatisticsPhases.HEIGHT,
+            Math.floorDiv(x, 16),
+            Math.floorDiv(z, 16),
+            () -> {
+                int y = properties.getMaxHeight();
+                while(y >= getMinY() && !heightmap.isOpaque().test(
+                    ((CraftBlockData) delegate.getBlock(properties, x, y - 1, z, biomeProvider).getHandle()).getState())) {
+                    y--;
+                }
+                return y;
+            });
     }
 
     @Override
     public @NotNull NoiseColumn getBaseColumn(int x, int z, @NotNull LevelHeightAccessor world, @NotNull RandomState noiseConfig) {
-        BlockState[] array = new BlockState[world.getHeight()];
         WorldProperties properties = new NMSWorldProperties(seed, world);
         BiomeProvider biomeProvider = pack.getBiomeProvider();
-        for(int y = properties.getMaxHeight(); y >= properties.getMinHeight(); y--) {
-            array[y - properties.getMinHeight()] = ((CraftBlockData) delegate.getBlock(properties, x, y, z, biomeProvider)
-                .getHandle()).getState();
-        }
-        return new NoiseColumn(getMinY(), array);
+        return ChunkStatisticsSupport.measureWindow(platform,
+            pack,
+            ChunkStatisticsWindows.COLUMN,
+            ChunkStatisticsPhases.COLUMN,
+            Math.floorDiv(x, 16),
+            Math.floorDiv(z, 16),
+            () -> {
+                BlockState[] array = new BlockState[world.getHeight()];
+                for(int y = properties.getMaxHeight(); y >= properties.getMinHeight(); y--) {
+                    array[y - properties.getMinHeight()] = ((CraftBlockData) delegate.getBlock(properties, x, y, z, biomeProvider)
+                        .getHandle()).getState();
+                }
+                return new NoiseColumn(getMinY(), array);
+            });
     }
 
     @Override

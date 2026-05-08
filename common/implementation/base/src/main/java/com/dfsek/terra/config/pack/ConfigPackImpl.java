@@ -116,7 +116,7 @@ public class ConfigPackImpl implements ConfigPack {
 
     private final ParseOptions parseOptions;
 
-    @SuppressWarnings({ "rawtypes" })
+    @SuppressWarnings({ "rawtypes", "this-escape" })
     public ConfigPackImpl(Path path, Platform platform) throws IOException {
         long start = System.nanoTime();
 
@@ -142,10 +142,10 @@ public class ConfigPackImpl implements ConfigPack {
         this.platform = platform;
         this.configTypeRegistry = createConfigRegistry();
 
-        register(selfLoader);
+        selfLoader.registerLoader(ConfigType.class, configTypeRegistry);
         platform.register(selfLoader);
 
-        register(abstractConfigLoader);
+        abstractConfigLoader.registerLoader(ConfigType.class, configTypeRegistry);
         platform.register(abstractConfigLoader);
 
         ConfigPackAddonsTemplate addonsTemplate = new ConfigPackAddonsTemplate();
@@ -191,15 +191,14 @@ public class ConfigPackImpl implements ConfigPack {
             }, ListMultimap::putAll);
 
         configTypeRegistry.forEach(configType -> {
-            CheckedRegistry registry = getCheckedRegistry(configType.getTypeKey());
+            CheckedRegistry<Object> registry = getCheckedRegistryUnchecked(configType.getTypeKey());
             abstractConfigLoader
                 .loadConfigs(multimap.get(configType))
                 .stream()
                 .parallel()
                 .map(configuration -> {
                     logger.debug("Loading abstract config {}", configuration.getID());
-                    Object loaded = ((ConfigFactory) configType.getFactory()).build(
-                        selfLoader.load(configType.getTemplate(this, platform), configuration), platform);
+                    Object loaded = buildConfig(configType, configuration);
                     platform.getEventManager().callEvent(new ConfigurationLoadEvent(this,
                         configuration,
                         template -> selfLoader.load(template,
@@ -225,6 +224,7 @@ public class ConfigPackImpl implements ConfigPack {
         checkDeadEntries();
     }
 
+    @SuppressWarnings("this-escape")
     private Map<String, Configuration> discoverConfigurations() {
         Map<String, Configuration> configurations = new HashMap<>();
         platform.getEventManager().callEvent(new ConfigurationDiscoveryEvent(this,
@@ -297,6 +297,7 @@ public class ConfigPackImpl implements ConfigPack {
         return seededBiomeProvider;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <T> CheckedRegistry<T> getOrCreateRegistry(TypeKey<T> typeKey) {
         return (CheckedRegistry<T>) registryMap.computeIfAbsent(typeKey.getType(), c -> {
@@ -354,7 +355,7 @@ public class ConfigPackImpl implements ConfigPack {
         return parseOptions;
     }
 
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public <T> ConfigPack registerShortcut(TypeKey<T> clazz, String shortcut, ShortcutLoader<T> loader) {
         ShortcutHolder<?> holder = shortcuts
@@ -397,11 +398,13 @@ public class ConfigPackImpl implements ConfigPack {
         return template;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <T> CheckedRegistry<T> getRegistry(Type type) {
         return (CheckedRegistry<T>) registryMap.get(type);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <T> CheckedRegistry<T> getCheckedRegistry(Type type) throws IllegalStateException {
         return (CheckedRegistry<T>) registryMap.get(type);
@@ -415,5 +418,16 @@ public class ConfigPackImpl implements ConfigPack {
     @Override
     public Context getContext() {
         return context;
+    }
+
+    @SuppressWarnings("unchecked")
+    private CheckedRegistry<Object> getCheckedRegistryUnchecked(TypeKey<?> typeKey) {
+        return getCheckedRegistry(typeKey.getType());
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private Object buildConfig(ConfigType<?, ?> configType, Configuration configuration) {
+        return ((ConfigFactory) configType.getFactory()).build(
+            selfLoader.load(configType.getTemplate(this, platform), configuration), platform);
     }
 }

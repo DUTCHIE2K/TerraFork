@@ -32,9 +32,10 @@ public class PlatformImpl extends AbstractPlatform {
     private final TerraSpongePlugin plugin;
     private final SpongeWorldHandle worldHandle = new SpongeWorldHandle();
 
+    @SuppressWarnings("this-escape")
     public PlatformImpl(TerraSpongePlugin plugin) {
         this.plugin = plugin;
-        load();
+        initializePlatform();
     }
 
     @Override

@@ -44,6 +44,7 @@ public class AllayGeneratorWrapper implements GeneratorWrapper {
     protected WorldProperties worldProperties;
     protected AllayServerWorld allayServerWorld;
 
+    @SuppressWarnings("this-escape")
     public AllayGeneratorWrapper(String preset) {
         var options = AllayStringUtils.parseOptions(preset);
         this.seed = parseSeed(options.get(OPTION_SEED));

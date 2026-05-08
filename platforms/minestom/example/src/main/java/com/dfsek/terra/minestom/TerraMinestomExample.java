@@ -118,6 +118,7 @@ public class TerraMinestomExample {
 
 
     public class RegenerateCommand extends Command {
+        @SuppressWarnings("this-escape")
         public RegenerateCommand() {
             super("regenerate");
             setDefaultExecutor((sender, context) -> regenerate());

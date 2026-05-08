@@ -93,6 +93,7 @@ public class PresetUtil {
         return Pair.of(generatorID, preset);
     }
 
+    @SuppressWarnings("deprecation")
     private static void insertCustom(ModPlatform platform, String key, ConfigPack pack, Registry<DimensionType> dimensionTypeRegistry,
                                      Registry<ChunkGeneratorSettings> chunkGeneratorSettingsRegistry,
                                      HashMap<RegistryKey<DimensionOptions>, DimensionOptions> dimensionMap, boolean packInMetapack) {

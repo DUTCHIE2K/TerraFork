@@ -17,6 +17,8 @@
 
 package com.dfsek.terra.statistics;
 
+import java.util.function.Supplier;
+
 import com.dfsek.terra.api.Platform;
 import com.dfsek.terra.api.config.ConfigPack;
 import com.dfsek.terra.api.statistics.ChunkStatisticsCollector;
@@ -36,6 +38,44 @@ public final class ChunkStatisticsSupport {
 
     public static ChunkStatisticsSession beginWindow(Platform platform, ConfigPack pack, String window, int chunkX, int chunkZ) {
         return platform.getChunkStatistics().beginChunk(platform.platformName(), pack.getID(), window, chunkX, chunkZ);
+    }
+
+    @SuppressWarnings("try")
+    public static <T> T measureWindow(Platform platform,
+                                      ConfigPack pack,
+                                      String window,
+                                      String phase,
+                                      int chunkX,
+                                      int chunkZ,
+                                      Supplier<T> supplier) {
+        ChunkStatisticsCollector collector = platform.getChunkStatistics();
+        ChunkStatisticsSession session = beginWindow(platform, pack, window, chunkX, chunkZ);
+        try(session) {
+            try(ChunkStatisticsSession.Activation activation = session.activate()) {
+                collector.pushPhase(phase);
+                try {
+                    return supplier.get();
+                } finally {
+                    collector.popPhase(phase);
+                }
+            } catch(RuntimeException | Error e) {
+                session.fail(e);
+                throw e;
+            }
+        }
+    }
+
+    public static void measureWindow(Platform platform,
+                                     ConfigPack pack,
+                                     String window,
+                                     String phase,
+                                     int chunkX,
+                                     int chunkZ,
+                                     Runnable runnable) {
+        measureWindow(platform, pack, window, phase, chunkX, chunkZ, () -> {
+            runnable.run();
+            return null;
+        });
     }
 
     public static void generateBase(Platform platform,

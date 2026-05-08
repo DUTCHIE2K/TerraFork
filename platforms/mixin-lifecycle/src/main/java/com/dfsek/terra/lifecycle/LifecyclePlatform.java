@@ -25,7 +25,6 @@ import java.util.stream.Stream;
 import com.dfsek.terra.addon.EphemeralAddon;
 import com.dfsek.terra.api.addon.BaseAddon;
 import com.dfsek.terra.lifecycle.util.LifecycleBiomeUtil;
-import com.dfsek.terra.mod.CommonPlatform;
 import com.dfsek.terra.mod.ModPlatform;
 import com.dfsek.terra.mod.generation.MinecraftChunkGeneratorWrapper;
 
@@ -50,8 +49,6 @@ public abstract class LifecyclePlatform extends ModPlatform {
         if(generationThreads == 0) {
             generationThreads = 1;
         }
-        CommonPlatform.initialize(this);
-        load();
     }
 
     public static void setRegistries(Registry<Biome> biomeRegistry,

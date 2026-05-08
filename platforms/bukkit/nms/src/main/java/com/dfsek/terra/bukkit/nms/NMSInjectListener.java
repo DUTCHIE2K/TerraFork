@@ -25,9 +25,11 @@ public class NMSInjectListener implements Listener {
     private static final Logger LOGGER = LoggerFactory.getLogger(NMSInjectListener.class);
     private static final Set<World> INJECTED = new HashSet<>();
     private static final ReentrantLock INJECT_LOCK = new ReentrantLock();
+    private final NMSPlatform platform;
     private final PluginConfig pluginConfig;
 
-    public NMSInjectListener(PluginConfig pluginConfig) {
+    public NMSInjectListener(NMSPlatform platform, PluginConfig pluginConfig) {
+        this.platform = platform;
         this.pluginConfig = pluginConfig;
     }
 
@@ -49,7 +51,7 @@ public class NMSInjectListener implements Listener {
             WorldGenContext worldGenContext = Reflection.CHUNKMAP.getWorldGenContext(chunkMap);
             Reflection.CHUNKMAP.setWorldGenContext(chunkMap, new WorldGenContext(
                 worldGenContext.level(),
-                new NMSChunkGeneratorDelegate(vanilla, pack, provider, craftWorld.getSeed(), pluginConfig),
+                new NMSChunkGeneratorDelegate(platform, vanilla, pack, provider, craftWorld.getSeed(), pluginConfig),
                 worldGenContext.structureManager(),
                 worldGenContext.lightEngine(),
                 worldGenContext.mainThreadExecutor(),

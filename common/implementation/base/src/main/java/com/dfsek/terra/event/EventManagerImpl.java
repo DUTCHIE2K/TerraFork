@@ -30,7 +30,7 @@ public class EventManagerImpl implements EventManager {
     private final Map<Class<?>, EventHandler> handlers = new HashMap<>();
 
     public EventManagerImpl() {
-        registerHandler(FunctionalEventHandler.class, new FunctionalEventHandlerImpl()); // default handler
+        handlers.put(FunctionalEventHandler.class, new FunctionalEventHandlerImpl()); // default handler
     }
 
     @Override

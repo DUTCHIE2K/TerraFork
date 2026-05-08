@@ -80,11 +80,7 @@ public class MetaPackImpl implements MetaPack {
             packManifestPath.getFileName().toString());
 
         this.platform = platform;
-
-        register(selfLoader);
         platform.register(selfLoader);
-
-        register(abstractConfigLoader);
         platform.register(abstractConfigLoader);
 
         selfLoader.load(template, packManifest);
@@ -122,7 +118,7 @@ public class MetaPackImpl implements MetaPack {
         this.author = String.join(", ", authors);
 
         logger.info("Loaded metapack \"{}:{}\" v{} by {} in {}ms.",
-            namespace, id, getVersion().getFormatted(), author, (System.nanoTime() - start) / 1000000.0D);
+            namespace, id, template.getVersion().getFormatted(), author, (System.nanoTime() - start) / 1000000.0D);
     }
 
 
@@ -151,16 +147,19 @@ public class MetaPackImpl implements MetaPack {
         return key;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <T> CheckedRegistry<T> getRegistry(Type type) {
         return (CheckedRegistry<T>) registryMap.get(type);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <T> CheckedRegistry<T> getCheckedRegistry(Type type) throws IllegalStateException {
         return (CheckedRegistry<T>) registryMap.get(type);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <T> CheckedRegistry<T> getOrCreateRegistry(TypeKey<T> typeKey) {
         return (CheckedRegistry<T>) registryMap.computeIfAbsent(typeKey.getType(), c -> {

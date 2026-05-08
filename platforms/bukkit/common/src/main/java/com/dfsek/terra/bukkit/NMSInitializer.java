@@ -45,9 +45,11 @@ public interface NMSInitializer {
     private static PlatformImpl constructPlatform(TerraBukkitPlugin plugin) {
         try {
             Class<?> platformClass = Class.forName(TERRA_PACKAGE + ".nms.NMSPlatform");
-            return (PlatformImpl) platformClass
+            PlatformImpl platform = (PlatformImpl) platformClass
                 .getConstructor(TerraBukkitPlugin.class)
                 .newInstance(plugin);
+            platformClass.getMethod("registerInjectionListener").invoke(platform);
+            return platform;
         } catch(ReflectiveOperationException e) {
             throw new RuntimeException("Error initializing NMS bindings. Report this to Terra.", e);
         }

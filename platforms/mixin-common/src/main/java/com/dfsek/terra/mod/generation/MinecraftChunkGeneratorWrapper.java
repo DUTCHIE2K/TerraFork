@@ -51,6 +51,7 @@ import java.util.stream.Collectors;
 
 import com.dfsek.terra.api.block.state.BlockStateExtended;
 import com.dfsek.terra.api.config.ConfigPack;
+import com.dfsek.terra.api.statistics.ChunkStatisticsPhases;
 import com.dfsek.terra.api.statistics.ChunkStatisticsSession;
 import com.dfsek.terra.api.statistics.ChunkStatisticsWindows;
 import com.dfsek.terra.api.world.biome.generation.BiomeProvider;
@@ -139,7 +140,13 @@ public class MinecraftChunkGeneratorWrapper extends net.minecraft.world.gen.chun
 
             PreLoadCompatibilityOptions compatibilityOptions = pack.getContext().get(PreLoadCompatibilityOptions.class);
             if(compatibilityOptions.isBeard()) {
-                beard(structureAccessor, chunk, world, biomeProvider, compatibilityOptions);
+                ChunkStatisticsSupport.measureWindow(CommonPlatform.get(),
+                    pack,
+                    ChunkStatisticsWindows.BEARD,
+                    ChunkStatisticsPhases.BEARD,
+                    chunk.getPos().x,
+                    chunk.getPos().z,
+                    () -> beard(structureAccessor, chunk, world, biomeProvider, compatibilityOptions));
             }
             return chunk;
         }, Util.getMainWorkerExecutor());
@@ -228,29 +235,45 @@ public class MinecraftChunkGeneratorWrapper extends net.minecraft.world.gen.chun
         WorldProperties properties = MinecraftAdapter.adapt(height, SeedHack.getSeed(noiseConfig.getMultiNoiseSampler()));
         BiomeProvider biomeProvider = pack.getBiomeProvider();
         int min = height.getBottomY();
-        for(int y = height.getTopYInclusive() - 1; y >= min; y--) {
-            com.dfsek.terra.api.block.state.BlockState terraBlockState = delegate.getBlock(properties, x, y, z, biomeProvider);
-            BlockState blockState =
-                (BlockState) (terraBlockState.isExtended() ? ((BlockStateExtended) terraBlockState).getState() : terraBlockState);
-            if(heightmap
-                .getBlockPredicate()
-                .test(blockState)) return y + 1;
-        }
-        return min;
+        return ChunkStatisticsSupport.measureWindow(CommonPlatform.get(),
+            pack,
+            ChunkStatisticsWindows.HEIGHT,
+            ChunkStatisticsPhases.HEIGHT,
+            Math.floorDiv(x, 16),
+            Math.floorDiv(z, 16),
+            () -> {
+                for(int y = height.getTopYInclusive() - 1; y >= min; y--) {
+                    com.dfsek.terra.api.block.state.BlockState terraBlockState = delegate.getBlock(properties, x, y, z, biomeProvider);
+                    BlockState blockState =
+                        (BlockState) (terraBlockState.isExtended() ? ((BlockStateExtended) terraBlockState).getState() : terraBlockState);
+                    if(heightmap
+                        .getBlockPredicate()
+                        .test(blockState)) return y + 1;
+                }
+                return min;
+            });
     }
 
     @Override
     public VerticalBlockSample getColumnSample(int x, int z, HeightLimitView height, NoiseConfig noiseConfig) {
-        BlockState[] array = new BlockState[height.getHeight()];
         WorldProperties properties = MinecraftAdapter.adapt(height, SeedHack.getSeed(noiseConfig.getMultiNoiseSampler()));
         BiomeProvider biomeProvider = pack.getBiomeProvider();
-        for(int y = height.getTopYInclusive() - 1; y >= height.getBottomY(); y--) {
-            com.dfsek.terra.api.block.state.BlockState terraBlockState = delegate.getBlock(properties, x, y, z, biomeProvider);
-            BlockState blockState =
-                (BlockState) (terraBlockState.isExtended() ? ((BlockStateExtended) terraBlockState).getState() : terraBlockState);
-            array[y - height.getBottomY()] = blockState;
-        }
-        return new VerticalBlockSample(height.getBottomY(), array);
+        return ChunkStatisticsSupport.measureWindow(CommonPlatform.get(),
+            pack,
+            ChunkStatisticsWindows.COLUMN,
+            ChunkStatisticsPhases.COLUMN,
+            Math.floorDiv(x, 16),
+            Math.floorDiv(z, 16),
+            () -> {
+                BlockState[] array = new BlockState[height.getHeight()];
+                for(int y = height.getTopYInclusive() - 1; y >= height.getBottomY(); y--) {
+                    com.dfsek.terra.api.block.state.BlockState terraBlockState = delegate.getBlock(properties, x, y, z, biomeProvider);
+                    BlockState blockState =
+                        (BlockState) (terraBlockState.isExtended() ? ((BlockStateExtended) terraBlockState).getState() : terraBlockState);
+                    array[y - height.getBottomY()] = blockState;
+                }
+                return new VerticalBlockSample(height.getBottomY(), array);
+            });
     }
 
     @Override

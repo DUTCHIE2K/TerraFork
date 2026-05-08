@@ -108,7 +108,7 @@ public class MinecraftWorldHandle implements WorldHandle {
 
             if(reader.canRead() && reader.peek() == '{') {
                 nbtData = StringNbtReader.readCompoundAsArgument(reader);
-                nbtData.putString("id", entity.getRegistryEntry().registryKey().getValue().toString());
+                nbtData.putString("id", Registries.ENTITY_TYPE.getId(entity).toString());
             }
 
             EntityType entityType;

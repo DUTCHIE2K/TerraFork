@@ -60,7 +60,7 @@ public class StructureScript implements Structure, Keyed<StructureScript> {
     private final String profile;
     private final Platform platform;
 
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings({ "rawtypes", "unchecked", "this-escape" })
     public StructureScript(InputStream inputStream, RegistryKey id, Platform platform, Registry<Structure> registry,
                            Registry<LootTable> lootRegistry,
                            Registry<FunctionBuilder> functionRegistry) {
@@ -73,7 +73,6 @@ public class StructureScript implements Structure, Keyed<StructureScript> {
         this.id = id;
         this.profile = "terrascript_direct:" + id;
 
-        //noinspection unchecked
         functionRegistry.forEach((key, function) -> parser.registerFunction(key.getID(), function)); // Register registry functions.
 
         parser

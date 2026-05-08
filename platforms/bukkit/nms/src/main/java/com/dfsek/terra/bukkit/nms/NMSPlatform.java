@@ -42,10 +42,14 @@ import com.dfsek.terra.bukkit.nms.config.VillagerTypeTemplate;
 
 public class NMSPlatform extends PlatformImpl {
 
+    @SuppressWarnings("this-escape")
     public NMSPlatform(TerraBukkitPlugin plugin) {
         super(plugin);
+        initializePlatform();
+    }
 
-        Bukkit.getPluginManager().registerEvents(new NMSInjectListener(getTerraConfig()), plugin);
+    public void registerInjectionListener() {
+        Bukkit.getPluginManager().registerEvents(new NMSInjectListener(this, getTerraConfig()), getPlugin());
     }
 
     @Override
@@ -81,16 +85,12 @@ public class NMSPlatform extends PlatformImpl {
     }
 
     @Override
-    protected InternalAddon load() {
-        InternalAddon internalAddon = super.load();
-
+    protected void onPlatformInitialized(InternalAddon internalAddon) {
         this.getEventManager().getHandler(FunctionalEventHandler.class)
             .register(internalAddon, PlatformInitializationEvent.class)
             .priority(1)
             .then(event -> AwfulBukkitHacks.registerBiomes(this.getRawConfigRegistry()))
             .global();
-
-        return internalAddon;
     }
 
     @Override

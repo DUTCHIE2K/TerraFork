@@ -32,24 +32,18 @@ public class BinaryColumn {
      * @param maxY Maximum Y value
      */
     public BinaryColumn(int minY, int maxY, IntToBooleanFunction data) {
+        if(maxY <= minY) throw new IllegalArgumentException("Max y must be greater than min y");
         this.minY = minY;
         this.maxY = maxY;
-        this.results = Lazy.lazy(() -> {
-            boolean[] res = new boolean[maxY - minY];
-            for(int y = minY; y < maxY; y++) {
-                res[y - minY] = get(y);
-            }
-            return res;
-        });
-        if(maxY <= minY) throw new IllegalArgumentException("Max y must be greater than min y");
         this.data = data;
+        this.results = createResults(minY, maxY, data);
     }
 
     public BinaryColumn(int minY, int maxY, boolean[] data) {
+        if(maxY <= minY) throw new IllegalArgumentException("Max y must be greater than min y");
         this.minY = minY;
         this.maxY = maxY;
         this.results = Lazy.lazy(() -> data);
-        if(maxY <= minY) throw new IllegalArgumentException("Max y must be greater than min y");
         this.data = y -> data[y - minY];
     }
 
@@ -135,5 +129,15 @@ public class BinaryColumn {
 
     private interface BooleanBinaryOperator {
         boolean apply(BooleanSupplier a, BooleanSupplier b);
+    }
+
+    private static Lazy<boolean[]> createResults(int minY, int maxY, IntToBooleanFunction data) {
+        return Lazy.lazy(() -> {
+            boolean[] res = new boolean[maxY - minY];
+            for(int y = minY; y < maxY; y++) {
+                res[y - minY] = data.apply(y);
+            }
+            return res;
+        });
     }
 }

@@ -53,9 +53,10 @@ public class ForgePlatform extends ModPlatform {
     private static final Logger LOGGER = LoggerFactory.getLogger(ForgePlatform.class);
     private final Lazy<File> dataFolder = Lazy.lazy(() -> new File("./config/Terra"));
 
+    @SuppressWarnings("this-escape")
     public ForgePlatform() {
         CommonPlatform.initialize(this);
-        load();
+        initializePlatform();
     }
 
     @Override

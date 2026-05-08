@@ -98,14 +98,13 @@ public abstract class AbstractPlatform implements Platform {
     private final CheckedRegistry<MetaPack> checkedMetaConfigRegistry = new CheckedRegistryImpl<>(metaConfigRegistry);
     private final Profiler profiler = new ProfilerImpl();
     private final ChunkStatisticsCollectorImpl chunkStatistics = new ChunkStatisticsCollectorImpl();
-    private final GenericLoaders loaders = new GenericLoaders(this);
     private final PluginConfigImpl config = new PluginConfigImpl();
     private final CheckedRegistry<BaseAddon> addonRegistry = new CheckedRegistryImpl<>(new OpenRegistryImpl<>(TypeKey.of(BaseAddon.class)));
     private final Registry<BaseAddon> lockedAddonRegistry = new LockedRegistryImpl<>(addonRegistry);
 
     public static int getGenerationThreadsWithReflection(String className, String fieldName, String project) {
         try {
-            Class aClass = Class.forName(className);
+            Class<?> aClass = Class.forName(className);
             int threads = aClass.getField(fieldName).getInt(null);
             logger.info("{} found, setting {} generation threads.", project, threads);
             return threads;
@@ -154,7 +153,7 @@ public abstract class AbstractPlatform implements Platform {
         return Collections.emptySet();
     }
 
-    protected InternalAddon load() {
+    protected final InternalAddon initializePlatform() {
         if(LOADED.get()) {
             throw new IllegalStateException(
                 "Someone tried to initialize Terra, but Terra has already initialized. This is most likely due to a broken platform " +
@@ -205,7 +204,11 @@ public abstract class AbstractPlatform implements Platform {
         logger.info("Terra addons successfully loaded.");
         logger.info("Finished initialization.");
 
+        onPlatformInitialized(internalAddon);
         return internalAddon;
+    }
+
+    protected void onPlatformInitialized(InternalAddon internalAddon) {
     }
 
     protected boolean loadConfigPacks() {
@@ -397,7 +400,7 @@ public abstract class AbstractPlatform implements Platform {
 
     @Override
     public void register(TypeRegistry registry) {
-        loaders.register(registry);
+        new GenericLoaders(this).register(registry);
     }
 
     @Override

@@ -57,7 +57,7 @@ public class ProbabilityCollection<E> implements Collection<E> {
     @SuppressWarnings("unchecked")
     public E get(Sampler n, Vector3Int vector3Int, long seed) {
         if(array.length == 0) return null;
-        return (E) array[(int) NormalizationFunctions.normalizeIndex(
+        return (E) array[NormalizationFunctions.normalizeIndex(
             n.getSample(seed, vector3Int.getX(), vector3Int.getY(), vector3Int.getZ()),
             array.length)];
     }
@@ -65,7 +65,7 @@ public class ProbabilityCollection<E> implements Collection<E> {
     @SuppressWarnings("unchecked")
     public E get(Sampler n, Vector3 vector3Int, long seed) {
         if(array.length == 0) return null;
-        return (E) array[(int) NormalizationFunctions.normalizeIndex(
+        return (E) array[NormalizationFunctions.normalizeIndex(
             n.getSample(seed, vector3Int.getX(), vector3Int.getY(), vector3Int.getZ()),
             array.length)];
     }
@@ -73,7 +73,7 @@ public class ProbabilityCollection<E> implements Collection<E> {
     @SuppressWarnings("unchecked")
     public E get(Sampler n, double x, double z, long seed) {
         if(array.length == 0) return null;
-        return (E) array[(int) NormalizationFunctions.normalizeIndex(n.getSample(seed, x, z), array.length)];
+        return (E) array[NormalizationFunctions.normalizeIndex(n.getSample(seed, x, z), array.length)];
     }
 
     @SuppressWarnings("unchecked")

@@ -27,6 +27,7 @@ import com.dfsek.tectonic.impl.MapConfiguration;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.AnnotatedType;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.dfsek.terra.api.config.meta.Meta;
@@ -38,8 +39,8 @@ public class RangeLoader implements TypeLoader<Range> {
     @Override
     public Range load(@NotNull AnnotatedType type, @NotNull Object o, @NotNull ConfigLoader configLoader, DepthTracker depthTracker)
     throws LoadException {
-        if(o instanceof Map) {
-            return configLoader.load(new RangeMapTemplate(), new MapConfiguration((Map<String, Object>) o), depthTracker).get();
+        if(o instanceof Map<?, ?> map) {
+            return configLoader.load(new RangeMapTemplate(), new MapConfiguration(toStringObjectMap(map)), depthTracker).get();
         } else {
             int h = configLoader.loadType(Integer.class, o, depthTracker);
             return new ConstantRange(h, h + 1);
@@ -60,5 +61,11 @@ public class RangeLoader implements TypeLoader<Range> {
         public Range get() {
             return new ConstantRange(min, max);
         }
+    }
+
+    private static Map<String, Object> toStringObjectMap(Map<?, ?> input) {
+        Map<String, Object> converted = new LinkedHashMap<>(input.size());
+        input.forEach((key, value) -> converted.put((String) key, value));
+        return converted;
     }
 }

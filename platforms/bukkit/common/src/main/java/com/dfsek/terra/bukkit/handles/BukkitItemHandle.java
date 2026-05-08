@@ -39,12 +39,14 @@ public class BukkitItemHandle implements ItemHandle {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public Enchantment getEnchantment(String id) {
         return BukkitAdapter.adapt(
             org.bukkit.enchantments.Enchantment.getByKey(NamespacedKey.minecraft(MinecraftUtils.stripMinecraftNamespace(id))));
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public Set<Enchantment> getEnchantments() {
         return Arrays.stream(org.bukkit.enchantments.Enchantment.values()).map(BukkitAdapter::adapt).collect(Collectors.toSet());
     }

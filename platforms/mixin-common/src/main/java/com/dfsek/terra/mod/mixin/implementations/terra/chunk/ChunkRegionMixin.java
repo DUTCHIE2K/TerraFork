@@ -29,7 +29,6 @@ import net.minecraft.world.ChunkRegion;
 import net.minecraft.world.StructureWorldAccess;
 import net.minecraft.world.tick.MultiTickScheduler;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Implements;
 import org.spongepowered.asm.mixin.Interface;
@@ -66,7 +65,6 @@ public abstract class ChunkRegionMixin implements StructureWorldAccess {
     public abstract net.minecraft.block.BlockState getBlockState(BlockPos pos);
 
     @Shadow
-    @Nullable
     public abstract boolean setBlockState(BlockPos pos, net.minecraft.block.BlockState state, int flags, int maxUpdateDepth);
 
 
